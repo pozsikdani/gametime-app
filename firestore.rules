@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if user is a member of a team
+    function isTeamMember(teamId) {
+      return exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+    }
+
+    // Helper: check if user is a team admin
+    function isTeamAdmin(teamId) {
+      return get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper: check if user is a super admin
+    function isSuperAdmin() {
+      return request.auth.uid in get(/databases/$(database)/documents/appConfig/admins).data.superAdminUids;
+    }
+
+    // Global user profiles
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == uid;
+    }
+
+    // App config (super admin only)
+    match /appConfig/{doc} {
+      allow read: if request.auth != null;
+      allow write: if isSuperAdmin();
+    }
+
+    // Teams
+    match /teams/{teamId} {
+      allow read: if isTeamMember(teamId);
+      // Allow reading team doc for invite code lookup (unauthenticated users need this during registration)
+      allow list: if request.auth != null;
+      allow create: if isSuperAdmin();
+      allow update: if isTeamAdmin(teamId) || isSuperAdmin();
+
+      // Team members
+      match /members/{uid} {
+        allow read: if isTeamMember(teamId);
+        allow create: if request.auth.uid == uid;
+        allow update: if request.auth.uid == uid || isTeamAdmin(teamId);
+      }
+
+      // Team messages
+      match /messages/{messageId} {
+        allow read: if isTeamMember(teamId);
+        allow create: if isTeamMember(teamId);
+        allow delete: if isTeamAdmin(teamId);
+      }
+
+      // Team events
+      match /events/{eventId} {
+        allow read: if isTeamMember(teamId);
+        allow create: if isTeamAdmin(teamId) || isTeamMember(teamId);
+        allow update: if isTeamAdmin(teamId);
+        allow delete: if isTeamAdmin(teamId);
+
+        // RSVPs
+        match /rsvps/{uid} {
+          allow read: if isTeamMember(teamId);
+          allow write: if request.auth.uid == uid && isTeamMember(teamId);
+        }
+      }
+
+      // Team polls
+      match /polls/{pollId} {
+        allow read: if isTeamMember(teamId);
+        allow create: if isTeamAdmin(teamId);
+        allow update: if isTeamAdmin(teamId);
+        allow delete: if isTeamAdmin(teamId);
+
+        // Votes
+        match /votes/{uid} {
+          allow read: if isTeamMember(teamId);
+          allow write: if request.auth.uid == uid && isTeamMember(teamId);
+        }
+      }
+    }
+  }
+}
