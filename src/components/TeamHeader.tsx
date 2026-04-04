@@ -28,11 +28,11 @@ export default function TeamHeader() {
             onPress={() => setVisible(true)}
             activeOpacity={0.7}
           >
-            <Text style={styles.teamName}>{activeTeam?.name || 'Csapat'}</Text>
+            <Text style={styles.teamName}>{activeTeam?.name || 'Team'}</Text>
             <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
           </TouchableOpacity>
         ) : (
-          <Text style={styles.teamNameSingle}>{activeTeam?.name || 'Csapat'}</Text>
+          <Text style={styles.teamNameSingle}>{activeTeam?.name || 'Team'}</Text>
         )}
       </View>
 
@@ -44,7 +44,7 @@ export default function TeamHeader() {
       >
         <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
           <View style={styles.dropdown}>
-            <Text style={styles.dropdownTitle}>Csapatváltás</Text>
+            <Text style={styles.dropdownTitle}>Switch team</Text>
             {teams.map((team) => (
               <TouchableOpacity
                 key={team.id}

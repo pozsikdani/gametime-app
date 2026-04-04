@@ -90,8 +90,8 @@ export default function NextEventBanner({ onPress }: Props) {
 
   const isMatch = event.type === 'match';
   const d = event.date.toDate();
-  const days = ['Vas', 'Hét', 'Kedd', 'Sze', 'Csüt', 'Pén', 'Szo'];
-  const months = ['jan', 'feb', 'már', 'ápr', 'máj', 'jún', 'júl', 'aug', 'szept', 'okt', 'nov', 'dec'];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dateStr = `${months[d.getMonth()]} ${d.getDate()}. ${days[d.getDay()]} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 
   // Time until event
@@ -100,23 +100,23 @@ export default function NextEventBanner({ onPress }: Props) {
   const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   let countdown = '';
   if (diffDays > 0) {
-    countdown = `${diffDays} nap ${diffHours} óra múlva`;
+    countdown = `${diffDays} days ${diffHours} hours left`;
   } else if (diffHours > 0) {
-    countdown = `${diffHours} óra múlva`;
+    countdown = `${diffHours} hours left`;
   } else {
     const diffMins = Math.floor(diffMs / (1000 * 60));
-    countdown = `${diffMins} perc múlva`;
+    countdown = `${diffMins} min left`;
   }
 
   const rsvpButtons = isMatch
     ? [
-        { status: 'yes' as RsvpStatus, label: 'Igen', icon: 'checkmark-circle' as const, color: colors.success },
-        { status: 'no' as RsvpStatus, label: 'Nem', icon: 'close-circle' as const, color: colors.error },
+        { status: 'yes' as RsvpStatus, label: 'Yes', icon: 'checkmark-circle' as const, color: colors.success },
+        { status: 'no' as RsvpStatus, label: 'No', icon: 'close-circle' as const, color: colors.error },
       ]
     : [
-        { status: 'yes' as RsvpStatus, label: 'Megyek', icon: 'checkmark-circle' as const, color: colors.success },
-        { status: 'maybe' as RsvpStatus, label: 'Nem tudom', icon: 'help-circle' as const, color: '#fdcb6e' },
-        { status: 'no' as RsvpStatus, label: 'Nem', icon: 'close-circle' as const, color: colors.error },
+        { status: 'yes' as RsvpStatus, label: 'Yes', icon: 'checkmark-circle' as const, color: colors.success },
+        { status: 'maybe' as RsvpStatus, label: 'Maybe', icon: 'help-circle' as const, color: '#fdcb6e' },
+        { status: 'no' as RsvpStatus, label: 'No', icon: 'close-circle' as const, color: colors.error },
       ];
 
   if (collapsed) {
@@ -157,7 +157,7 @@ export default function NextEventBanner({ onPress }: Props) {
             size={14}
             color={colors.text}
           />
-          <Text style={styles.typeText}>{isMatch ? 'Meccs' : 'Edzés'}</Text>
+          <Text style={styles.typeText}>{isMatch ? 'Match' : 'Training'}</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <Text style={styles.countdown}>{countdown}</Text>

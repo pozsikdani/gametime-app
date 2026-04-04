@@ -1,5 +1,5 @@
 export const INVITE_CODE = 'kozgaz2026';
-export const APP_NAME = 'Közgáz Kosár';
+export const APP_NAME = 'Gametime';
 
 // Admin emails — these users can create/edit/delete events
 export const ADMIN_EMAILS = ['dani.pozsik@gmail.com'];

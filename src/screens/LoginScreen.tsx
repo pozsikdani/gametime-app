@@ -26,7 +26,7 @@ export default function LoginScreen({ navigation }: Props) {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      setError('Minden mező kitöltése kötelező');
+      setError('All fields are required');
       return;
     }
 
@@ -37,13 +37,13 @@ export default function LoginScreen({ navigation }: Props) {
       await signInWithEmailAndPassword(auth, email.trim(), password);
     } catch (e: any) {
       const messages: Record<string, string> = {
-        'auth/invalid-credential': 'Hibás email vagy jelszó',
-        'auth/invalid-email': 'Érvénytelen email cím',
-        'auth/user-not-found': 'Nincs ilyen felhasználó',
-        'auth/wrong-password': 'Hibás jelszó',
-        'auth/too-many-requests': 'Túl sok próbálkozás, próbáld újra később',
+        'auth/invalid-credential': 'Invalid email or password',
+        'auth/invalid-email': 'Invalid email address',
+        'auth/user-not-found': 'No such user',
+        'auth/wrong-password': 'Wrong password',
+        'auth/too-many-requests': 'Too many attempts, try again later',
       };
-      setError(messages[e.code] || 'Hiba történt a bejelentkezés során');
+      setError(messages[e.code] || 'An error occurred during login');
     } finally {
       setLoading(false);
     }
@@ -55,7 +55,7 @@ export default function LoginScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Bejelentkezés</Text>
+        <Text style={styles.title}>Log in</Text>
 
         <TextInput
           style={styles.input}
@@ -69,7 +69,7 @@ export default function LoginScreen({ navigation }: Props) {
 
         <TextInput
           style={styles.input}
-          placeholder="Jelszó"
+          placeholder="Password"
           placeholderTextColor={colors.textSecondary}
           value={password}
           onChangeText={setPassword}
@@ -84,12 +84,12 @@ export default function LoginScreen({ navigation }: Props) {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Bejelentkezés...' : 'Bejelentkezés'}
+            {loading ? 'Logging in...' : 'Log in'}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Invite')}>
-          <Text style={styles.link}>Nincs még fiókod? Regisztrálj</Text>
+          <Text style={styles.link}>Don't have an account? Sign up</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   collection,
   query,
@@ -38,6 +39,7 @@ export default function ChatScreen({ navigation }: Props) {
   const flatListRef = useRef<FlatList>(null);
   const currentUser = auth.currentUser;
   const { activeTeamId } = useTeam();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const q = query(
@@ -101,7 +103,7 @@ export default function ChatScreen({ navigation }: Props) {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 44 : 0}
     >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chat</Text>
@@ -127,8 +129,8 @@ export default function ChatScreen({ navigation }: Props) {
         contentContainerStyle={styles.messageList}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Még nincsenek üzenetek</Text>
-            <Text style={styles.emptySubtext}>Írj elsőként!</Text>
+            <Text style={styles.emptyText}>No messages yet</Text>
+            <Text style={styles.emptySubtext}>Be the first to write!</Text>
           </View>
         }
         onContentSizeChange={() => {

@@ -62,7 +62,7 @@ export default function PollsScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Szavazások</Text>
+        <Text style={styles.headerTitle}>Polls</Text>
         {isAdmin && (
           <TouchableOpacity
             onPress={() => navigation.navigate('CreatePoll')}
@@ -76,11 +76,11 @@ export default function PollsScreen({ navigation }: Props) {
       <FlatList
         data={[
           ...(activePolls.length > 0
-            ? [{ id: '__header_active', _isHeader: true, _title: `Aktív (${activePolls.length})` } as any]
+            ? [{ id: '__header_active', _isHeader: true, _title: `Active (${activePolls.length})` } as any]
             : []),
           ...activePolls,
           ...(closedPolls.length > 0
-            ? [{ id: '__header_closed', _isHeader: true, _title: `Lezárt (${closedPolls.length})` } as any]
+            ? [{ id: '__header_closed', _isHeader: true, _title: `Closed (${closedPolls.length})` } as any]
             : []),
           ...closedPolls,
         ]}
@@ -112,8 +112,8 @@ export default function PollsScreen({ navigation }: Props) {
                   {poll.question}
                 </Text>
                 <Text style={styles.pollMeta}>
-                  {poll.options.length} opció
-                  {poll.closed ? ' · Lezárt' : ''}
+                  {poll.options.length} options
+                  {poll.closed ? ' · Closed' : ''}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
@@ -124,7 +124,7 @@ export default function PollsScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.center}>
             <Ionicons name="bar-chart-outline" size={48} color={colors.textSecondary} />
-            <Text style={styles.emptyText}>Nincs szavazás</Text>
+            <Text style={styles.emptyText}>No polls</Text>
           </View>
         }
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}

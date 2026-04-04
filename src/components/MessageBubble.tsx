@@ -29,11 +29,11 @@ export default function MessageBubble({ message, isOwn }: Props) {
     : '';
 
   if (message.type === 'system') {
-    const isCalendar = message.senderName === 'Naptár';
+    const isCalendar = message.senderName === 'Calendar';
     const icon = isCalendar ? 'calendar' : 'bar-chart';
     const title = isCalendar
-      ? (message.text.startsWith('Új ') ? 'Új esemény' : 'Esemény módosítva')
-      : 'Szavazás lezárva';
+      ? (message.text.startsWith('Új ') ? 'New event' : 'Event updated')
+      : 'Poll closed';
     const accentColor = isCalendar ? '#fdcb6e' : '#00cec9';
 
     return (

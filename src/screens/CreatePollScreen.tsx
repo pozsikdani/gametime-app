@@ -32,7 +32,7 @@ export default function CreatePollScreen({ navigation }: Props) {
 
   const addOption = () => {
     if (options.length >= 8) {
-      Alert.alert('Hiba', 'Maximum 8 opció lehet');
+      Alert.alert('Error', 'Maximum 8 options allowed');
       return;
     }
     setOptions([...options, '']);
@@ -40,7 +40,7 @@ export default function CreatePollScreen({ navigation }: Props) {
 
   const removeOption = (index: number) => {
     if (options.length <= 2) {
-      Alert.alert('Hiba', 'Minimum 2 opció kell');
+      Alert.alert('Error', 'Minimum 2 options required');
       return;
     }
     setOptions(options.filter((_, i) => i !== index));
@@ -54,13 +54,13 @@ export default function CreatePollScreen({ navigation }: Props) {
 
   const handleCreate = async () => {
     if (!question.trim()) {
-      Alert.alert('Hiba', 'Add meg a kérdést');
+      Alert.alert('Error', 'Please enter a question');
       return;
     }
 
     const validOptions = options.filter((o) => o.trim());
     if (validOptions.length < 2) {
-      Alert.alert('Hiba', 'Legalább 2 opció kell');
+      Alert.alert('Error', 'At least 2 options are required');
       return;
     }
 
@@ -82,7 +82,7 @@ export default function CreatePollScreen({ navigation }: Props) {
 
       navigation.goBack();
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült létrehozni a szavazást');
+      Alert.alert('Error', 'Failed to create poll');
     } finally {
       setLoading(false);
     }
@@ -94,24 +94,24 @@ export default function CreatePollScreen({ navigation }: Props) {
         <Ionicons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Új szavazás</Text>
+      <Text style={styles.title}>New poll</Text>
 
-      <Text style={styles.label}>Kérdés</Text>
+      <Text style={styles.label}>Question</Text>
       <TextInput
         style={styles.input}
-        placeholder="pl. Mikor tartsuk a csapatépítőt?"
+        placeholder="e.g. When should we have the team building?"
         placeholderTextColor={colors.textSecondary}
         value={question}
         onChangeText={setQuestion}
         multiline
       />
 
-      <Text style={styles.label}>Opciók</Text>
+      <Text style={styles.label}>Options</Text>
       {options.map((opt, i) => (
         <View key={i} style={styles.optionRow}>
           <TextInput
             style={[styles.input, styles.optionInput]}
-            placeholder={`${i + 1}. opció`}
+            placeholder={`Option ${i + 1}`}
             placeholderTextColor={colors.textSecondary}
             value={opt}
             onChangeText={(text) => updateOption(i, text)}
@@ -126,13 +126,13 @@ export default function CreatePollScreen({ navigation }: Props) {
 
       <TouchableOpacity style={styles.addOptionButton} onPress={addOption}>
         <Ionicons name="add-circle-outline" size={20} color={colors.accent} />
-        <Text style={styles.addOptionText}>Opció hozzáadása</Text>
+        <Text style={styles.addOptionText}>Add option</Text>
       </TouchableOpacity>
 
       <View style={styles.switchRow}>
         <View style={styles.switchLabel}>
           <Ionicons name="checkbox-outline" size={20} color={colors.text} />
-          <Text style={styles.switchText}>Több válasz engedélyezése</Text>
+          <Text style={styles.switchText}>Allow multiple answers</Text>
         </View>
         <Switch
           value={multipleChoice}
@@ -148,7 +148,7 @@ export default function CreatePollScreen({ navigation }: Props) {
         disabled={loading}
       >
         <Text style={styles.submitText}>
-          {loading ? 'Létrehozás...' : 'Szavazás létrehozása'}
+          {loading ? 'Creating...' : 'Create poll'}
         </Text>
       </TouchableOpacity>
     </ScrollView>

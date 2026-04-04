@@ -38,15 +38,15 @@ export default function CreateEventScreen({ navigation }: Props) {
 
   const handleCreate = async () => {
     if (!title.trim()) {
-      Alert.alert('Hiba', 'Add meg az esemény nevét');
+      Alert.alert('Error', 'Please enter an event name');
       return;
     }
     if (!dateStr.trim()) {
-      Alert.alert('Hiba', 'Add meg a dátumot (ÉÉÉÉ-HH-NN)');
+      Alert.alert('Error', 'Please enter a date (YYYY-MM-DD)');
       return;
     }
     if (!location.trim()) {
-      Alert.alert('Hiba', 'Add meg a helyszínt');
+      Alert.alert('Error', 'Please enter a location');
       return;
     }
 
@@ -54,7 +54,7 @@ export default function CreateEventScreen({ navigation }: Props) {
     const [year, month, day] = dateStr.split('-').map(Number);
     const [hour, minute] = timeStr.split(':').map(Number);
     if (!year || !month || !day || isNaN(hour) || isNaN(minute)) {
-      Alert.alert('Hiba', 'Érvénytelen dátum vagy idő formátum');
+      Alert.alert('Error', 'Invalid date or time format');
       return;
     }
 
@@ -79,23 +79,23 @@ export default function CreateEventScreen({ navigation }: Props) {
       await addDoc(collection(db, 'teams', activeTeamId!, 'events'), eventData);
 
       // Chat log
-      const typeLabel = type === 'match' ? 'Meccs' : 'Edzés';
-      const days = ['Vas', 'Hét', 'Kedd', 'Sze', 'Csüt', 'Pén', 'Szo'];
-      const months = ['jan', 'feb', 'már', 'ápr', 'máj', 'jún', 'júl', 'aug', 'szept', 'okt', 'nov', 'dec'];
+      const typeLabel = type === 'match' ? 'Match' : 'Training';
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const dateFormatted = `${months[date.getMonth()]} ${date.getDate()}. ${days[date.getDay()]} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      const chatText = `Új ${typeLabel.toLowerCase()}: "${title.trim()}"\n\n  ${dateFormatted}\n  ${location.trim()}`;
+      const chatText = `New ${typeLabel.toLowerCase()}: "${title.trim()}"\n\n  ${dateFormatted}\n  ${location.trim()}`;
 
       await addDoc(collection(db, 'teams', activeTeamId!, 'messages'), {
         text: chatText,
         senderId: 'system',
-        senderName: 'Naptár',
+        senderName: 'Calendar',
         createdAt: serverTimestamp(),
         type: 'system',
       });
 
       navigation.goBack();
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült létrehozni az eseményt');
+      Alert.alert('Error', 'Failed to create event');
     } finally {
       setLoading(false);
     }
@@ -107,39 +107,39 @@ export default function CreateEventScreen({ navigation }: Props) {
         <Ionicons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Új esemény</Text>
+      <Text style={styles.title}>New event</Text>
 
       {/* Type selector */}
-      <Text style={styles.label}>Típus</Text>
+      <Text style={styles.label}>Type</Text>
       <View style={styles.typeRow}>
         <TouchableOpacity
           style={[styles.typeButton, type === 'training' && styles.typeActive, type === 'training' && styles.trainingActive]}
           onPress={() => setType('training')}
         >
           <Ionicons name="fitness-outline" size={18} color={colors.text} />
-          <Text style={styles.typeText}>Edzés</Text>
+          <Text style={styles.typeText}>Training</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.typeButton, type === 'match' && styles.typeActive, type === 'match' && styles.matchActive]}
           onPress={() => setType('match')}
         >
           <Ionicons name="basketball-outline" size={18} color={colors.text} />
-          <Text style={styles.typeText}>Meccs</Text>
+          <Text style={styles.typeText}>Match</Text>
         </TouchableOpacity>
       </View>
 
       {/* Title */}
-      <Text style={styles.label}>Név</Text>
+      <Text style={styles.label}>Name</Text>
       <TextInput
         style={styles.input}
-        placeholder={type === 'match' ? 'pl. Közgáz vs Vasas' : 'pl. Kedd esti edzés'}
+        placeholder={type === 'match' ? 'e.g. Team vs Opponent' : 'e.g. Tuesday practice'}
         placeholderTextColor={colors.textSecondary}
         value={title}
         onChangeText={setTitle}
       />
 
       {/* Date & Time */}
-      <Text style={styles.label}>Dátum (ÉÉÉÉ-HH-NN)</Text>
+      <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
       <TextInput
         style={styles.input}
         placeholder="2025-10-15"
@@ -149,7 +149,7 @@ export default function CreateEventScreen({ navigation }: Props) {
         keyboardType="numbers-and-punctuation"
       />
 
-      <Text style={styles.label}>Időpont (ÓÓ:PP)</Text>
+      <Text style={styles.label}>Time (HH:MM)</Text>
       <TextInput
         style={styles.input}
         placeholder="20:00"
@@ -160,10 +160,10 @@ export default function CreateEventScreen({ navigation }: Props) {
       />
 
       {/* Location */}
-      <Text style={styles.label}>Helyszín</Text>
+      <Text style={styles.label}>Location</Text>
       <TextInput
         style={styles.input}
-        placeholder="pl. Közgáz tornaterem"
+        placeholder="e.g. Sports hall"
         placeholderTextColor={colors.textSecondary}
         value={location}
         onChangeText={setLocation}
@@ -172,7 +172,7 @@ export default function CreateEventScreen({ navigation }: Props) {
       {/* Match-specific */}
       {type === 'match' && (
         <>
-          <Text style={styles.label}>Ellenfél</Text>
+          <Text style={styles.label}>Opponent</Text>
           <TextInput
             style={styles.input}
             placeholder="pl. Vasas"
@@ -181,19 +181,19 @@ export default function CreateEventScreen({ navigation }: Props) {
             onChangeText={setOpponent}
           />
 
-          <Text style={styles.label}>Pálya</Text>
+          <Text style={styles.label}>Court</Text>
           <View style={styles.typeRow}>
             <TouchableOpacity
               style={[styles.typeButton, isHome && styles.typeActive, isHome && { backgroundColor: '#00b894' }]}
               onPress={() => setIsHome(true)}
             >
-              <Text style={styles.typeText}>Hazai</Text>
+              <Text style={styles.typeText}>Home</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.typeButton, !isHome && styles.typeActive, !isHome && { backgroundColor: colors.accent }]}
               onPress={() => setIsHome(false)}
             >
-              <Text style={styles.typeText}>Idegen</Text>
+              <Text style={styles.typeText}>Away</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -206,7 +206,7 @@ export default function CreateEventScreen({ navigation }: Props) {
         disabled={loading}
       >
         <Text style={styles.submitText}>
-          {loading ? 'Létrehozás...' : 'Esemény létrehozása'}
+          {loading ? 'Creating...' : 'Create event'}
         </Text>
       </TouchableOpacity>
     </ScrollView>

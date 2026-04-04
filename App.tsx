@@ -23,6 +23,8 @@ import PollDetailScreen from './src/screens/PollDetailScreen';
 import CreatePollScreen from './src/screens/CreatePollScreen';
 import TeamPickerScreen from './src/screens/TeamPickerScreen';
 import JoinTeamScreen from './src/screens/JoinTeamScreen';
+import MembersScreen from './src/screens/MembersScreen';
+import MemberDetailScreen from './src/screens/MemberDetailScreen';
 import TeamHeader from './src/components/TeamHeader';
 import { colors } from './src/constants/theme';
 
@@ -30,6 +32,7 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 const CalendarStack = createNativeStackNavigator();
 const PollStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
 
 const navTheme = {
   ...DefaultTheme,
@@ -56,6 +59,16 @@ function PollStackScreen() {
       <PollStack.Screen name="PollDetail" component={PollDetailScreen} />
       <PollStack.Screen name="CreatePoll" component={CreatePollScreen} />
     </PollStack.Navigator>
+  );
+}
+
+function ProfileStackScreen() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStack.Screen name="Members" component={MembersScreen} />
+      <ProfileStack.Screen name="MemberDetail" component={MemberDetailScreen} />
+    </ProfileStack.Navigator>
   );
 }
 
@@ -88,7 +101,7 @@ function MainTabs() {
         name="Calendar"
         component={CalendarStackScreen}
         options={{
-          tabBarLabel: 'Naptár',
+          tabBarLabel: 'Calendar',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
@@ -98,7 +111,7 @@ function MainTabs() {
         name="Polls"
         component={PollStackScreen}
         options={{
-          tabBarLabel: 'Szavazás',
+          tabBarLabel: 'Polls',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="bar-chart-outline" size={size} color={color} />
           ),
@@ -106,9 +119,9 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStackScreen}
         options={{
-          tabBarLabel: 'Profil',
+          tabBarLabel: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),

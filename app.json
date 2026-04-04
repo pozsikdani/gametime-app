@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Közgáz Kosár",
-    "slug": "kozgaz-kosar",
+    "name": "Gametime",
+    "slug": "gametime-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "hu.kozgazkosar.app",
+      "bundleIdentifier": "app.gametime.team",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -24,11 +24,11 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "backgroundColor": "#0a0b0e"
       },
-      "package": "hu.kozgazkosar.app"
+      "package": "app.gametime.team"
     },
     "extra": {
       "eas": {
-        "projectId": "dae6d15a-6495-4f8c-b1c5-7e93ed979a09"
+        "projectId": "dc2824cb-e6d4-4466-a46f-460af1a74e36"
       }
     },
     "owner": "pozsikdani"

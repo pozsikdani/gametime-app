@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../constants/theme';
 
@@ -21,14 +21,14 @@ export default function ChatInput({ onSend }: Props) {
     <View style={styles.container}>
       <TextInput
         style={styles.input}
-        placeholder="Üzenet..."
+        placeholder="Message..."
         placeholderTextColor={colors.textSecondary}
         value={text}
         onChangeText={setText}
-        multiline
         maxLength={1000}
-        onSubmitEditing={handleSend}
+        returnKeyType="send"
         blurOnSubmit={false}
+        onSubmitEditing={handleSend}
       />
       <TouchableOpacity
         style={[styles.sendButton, !text.trim() && styles.sendButtonDisabled]}
@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    paddingBottom: Platform.OS === 'ios' ? spacing.sm : spacing.sm,
     backgroundColor: colors.bg,
     borderTopWidth: 1,
     borderTopColor: colors.border,

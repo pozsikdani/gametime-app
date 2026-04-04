@@ -39,7 +39,7 @@ export default function InviteScreen({ navigation }: Props) {
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        setError('Hibás meghívó kód');
+        setError('Invalid invite code');
         setLoading(false);
         return;
       }
@@ -51,7 +51,7 @@ export default function InviteScreen({ navigation }: Props) {
       // Pass team info to Register screen
       navigation.navigate('Register', { teamId, teamName });
     } catch (e) {
-      setError('Hiba történt az ellenőrzés során');
+      setError('An error occurred during verification');
     } finally {
       setLoading(false);
     }
@@ -64,11 +64,11 @@ export default function InviteScreen({ navigation }: Props) {
     >
       <View style={styles.content}>
         <Text style={styles.title}>{APP_NAME}</Text>
-        <Text style={styles.subtitle}>Add meg a meghívó kódot</Text>
+        <Text style={styles.subtitle}>Enter your invite code</Text>
 
         <TextInput
           style={styles.input}
-          placeholder="Meghívó kód"
+          placeholder="Invite code"
           placeholderTextColor={colors.textSecondary}
           value={code}
           onChangeText={setCode}
@@ -87,12 +87,12 @@ export default function InviteScreen({ navigation }: Props) {
           {loading ? (
             <ActivityIndicator size="small" color={colors.text} />
           ) : (
-            <Text style={styles.buttonText}>Tovább</Text>
+            <Text style={styles.buttonText}>Continue</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.link}>Vissza a bejelentkezéshez</Text>
+          <Text style={styles.link}>Back to login</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

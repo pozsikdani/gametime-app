@@ -38,7 +38,7 @@ export default function TeamPickerScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Csapataim</Text>
+        <Text style={styles.headerTitle}>My teams</Text>
       </View>
       <FlatList
         data={teams}

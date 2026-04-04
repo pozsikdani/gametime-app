@@ -50,9 +50,9 @@ export default function CalendarScreen({ navigation }: Props) {
     setSyncing(true);
     try {
       const added = await syncMkoszMatches(activeTeamId!);
-      alert(added > 0 ? `${added} új meccs importálva!` : 'Nincs új meccs.');
+      alert(added > 0 ? `${added} new match(es) imported!` : 'No new matches.');
     } catch (e) {
-      alert('Hiba a szinkronizálás során');
+      alert('Error during sync');
     } finally {
       setSyncing(false);
     }
@@ -121,8 +121,8 @@ export default function CalendarScreen({ navigation }: Props) {
 
   const formatDate = (timestamp: Timestamp) => {
     const d = timestamp.toDate();
-    const days = ['Vas', 'Hét', 'Kedd', 'Sze', 'Csüt', 'Pén', 'Szo'];
-    const months = ['jan', 'feb', 'már', 'ápr', 'máj', 'jún', 'júl', 'aug', 'szept', 'okt', 'nov', 'dec'];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${months[d.getMonth()]} ${d.getDate()}. ${days[d.getDay()]} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
 
@@ -196,7 +196,7 @@ export default function CalendarScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Naptár</Text>
+        <Text style={styles.headerTitle}>Calendar</Text>
         <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
           {/* View mode toggle */}
           <TouchableOpacity
@@ -242,7 +242,7 @@ export default function CalendarScreen({ navigation }: Props) {
             onPress={() => setFilter(f)}
           >
             <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'all' ? 'Mind' : f === 'match' ? 'Meccsek' : 'Edzések'}
+              {f === 'all' ? 'All' : f === 'match' ? 'Matches' : 'Trainings'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -271,13 +271,13 @@ export default function CalendarScreen({ navigation }: Props) {
         /* ===== LIST VIEW ===== */
         <FlatList
           data={[
-            ...(thisWeek.length > 0 ? [{ id: '__header_thisweek', _isHeader: true, _title: `E heti események (${thisWeek.length})` } as any] : []),
+            ...(thisWeek.length > 0 ? [{ id: '__header_thisweek', _isHeader: true, _title: `This week (${thisWeek.length})` } as any] : []),
             ...thisWeek,
-            ...(nextWeek.length > 0 ? [{ id: '__header_nextweek', _isHeader: true, _title: `Jövő heti események (${nextWeek.length})` } as any] : []),
+            ...(nextWeek.length > 0 ? [{ id: '__header_nextweek', _isHeader: true, _title: `Next week (${nextWeek.length})` } as any] : []),
             ...nextWeek,
-            ...(later.length > 0 ? [{ id: '__header_later', _isHeader: true, _title: `További események (${later.length})` } as any] : []),
+            ...(later.length > 0 ? [{ id: '__header_later', _isHeader: true, _title: `Upcoming (${later.length})` } as any] : []),
             ...later,
-            ...(past.length > 0 ? [{ id: '__header_past', _isHeader: true, _title: `Korábbi események (${past.length})` } as any] : []),
+            ...(past.length > 0 ? [{ id: '__header_past', _isHeader: true, _title: `Past events (${past.length})` } as any] : []),
             ...past,
           ]}
           keyExtractor={(item) => item.id}
@@ -294,7 +294,7 @@ export default function CalendarScreen({ navigation }: Props) {
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>Nincs esemény</Text>
+              <Text style={styles.emptyText}>No events</Text>
             </View>
           }
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}

@@ -21,7 +21,7 @@ export interface MkoszConfig {
   season: string;
 }
 
-export type TeamRole = 'player' | 'coach' | 'admin';
+export type TeamRole = 'player' | 'coach' | 'admin' | 'guest';
 
 export interface TeamMembership {
   role: TeamRole;
@@ -32,6 +32,7 @@ export interface TeamMembership {
   phone: string;
   jerseySize: string;
   idNumber: string;
+  medicalExpiry: string;
   joinedAt: Timestamp;
 }
 

@@ -42,7 +42,7 @@ export default function JoinTeamScreen() {
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        Alert.alert('Hiba', 'Érvénytelen meghívókód');
+        Alert.alert('Error', 'Invalid invite code');
         setLoading(false);
         return;
       }
@@ -71,16 +71,16 @@ export default function JoinTeamScreen() {
 
       // TeamContext will pick up the change via onSnapshot
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült csatlakozni a csapathoz');
+      Alert.alert('Error', 'Failed to join team');
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert('Kilépés', 'Biztosan ki szeretnél lépni?', [
-      { text: 'Mégsem', style: 'cancel' },
-      { text: 'Kilépés', style: 'destructive', onPress: () => signOut(auth) },
+    Alert.alert('Log out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log out', style: 'destructive', onPress: () => signOut(auth) },
     ]);
   };
 
@@ -88,14 +88,14 @@ export default function JoinTeamScreen() {
     <View style={styles.container}>
       <View style={styles.content}>
         <Ionicons name="people" size={64} color={colors.accent} />
-        <Text style={styles.title}>Csatlakozz egy csapathoz</Text>
+        <Text style={styles.title}>Join a team</Text>
         <Text style={styles.subtitle}>
-          Írd be a csapat meghívókódját a csatlakozáshoz
+          Enter a team invite code to join
         </Text>
 
         <TextInput
           style={styles.input}
-          placeholder="Meghívókód"
+          placeholder="Invite code"
           placeholderTextColor={colors.textSecondary}
           value={code}
           onChangeText={setCode}
@@ -111,12 +111,12 @@ export default function JoinTeamScreen() {
           {loading ? (
             <ActivityIndicator size="small" color={colors.text} />
           ) : (
-            <Text style={styles.buttonText}>Csatlakozás</Text>
+            <Text style={styles.buttonText}>Join</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.logoutLink} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Kilépés</Text>
+          <Text style={styles.logoutText}>Log out</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -50,7 +50,8 @@ export default function EventDetailScreen({ route, navigation }: Props) {
   const [selectingSquad, setSelectingSquad] = useState(false);
   const currentUser = auth.currentUser;
   const isAdmin = useAdmin();
-  const { activeTeamId } = useTeam();
+  const { activeTeamId, membership } = useTeam();
+  const isGuest = membership?.role === 'guest';
 
   useEffect(() => {
     const unsubEvent = onSnapshot(doc(db, 'teams', activeTeamId!, 'events', eventId), (docSnap) => {
@@ -100,14 +101,14 @@ export default function EventDetailScreen({ route, navigation }: Props) {
 
   const saveEdit = async () => {
     if (!editTitle.trim() || !editLocation.trim() || !editDateStr.trim()) {
-      Alert.alert('Hiba', 'Minden mező kitöltése kötelező');
+      Alert.alert('Error', 'All fields are required');
       return;
     }
 
     const [year, month, day] = editDateStr.split('-').map(Number);
     const [hour, minute] = editTimeStr.split(':').map(Number);
     if (!year || !month || !day || isNaN(hour) || isNaN(minute)) {
-      Alert.alert('Hiba', 'Érvénytelen dátum vagy idő formátum');
+      Alert.alert('Error', 'Invalid date or time format');
       return;
     }
 
@@ -121,33 +122,33 @@ export default function EventDetailScreen({ route, navigation }: Props) {
       });
 
       // Chat log
-      const days = ['Vas', 'Hét', 'Kedd', 'Sze', 'Csüt', 'Pén', 'Szo'];
-      const months = ['jan', 'feb', 'már', 'ápr', 'máj', 'jún', 'júl', 'aug', 'szept', 'okt', 'nov', 'dec'];
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const dateFormatted = `${months[newDate.getMonth()]} ${newDate.getDate()}. ${days[newDate.getDay()]} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      const typeLabel = event?.type === 'match' ? 'Meccs' : 'Edzés';
-      const chatText = `${typeLabel} módosítva: "${editTitle.trim()}"\n\n  ${dateFormatted}\n  ${editLocation.trim()}`;
+      const typeLabel = event?.type === 'match' ? 'Match' : 'Training';
+      const chatText = `${typeLabel} updated: "${editTitle.trim()}"\n\n  ${dateFormatted}\n  ${editLocation.trim()}`;
 
       await addDoc(collection(db, 'teams', activeTeamId!, 'messages'), {
         text: chatText,
         senderId: 'system',
-        senderName: 'Naptár',
+        senderName: 'Calendar',
         createdAt: serverTimestamp(),
         type: 'system',
       });
 
       setEditing(false);
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült menteni');
+      Alert.alert('Error', 'Failed to save');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = () => {
-    Alert.alert('Törlés', 'Biztosan törlöd ezt az eseményt?', [
-      { text: 'Mégsem', style: 'cancel' },
+    Alert.alert('Delete', 'Are you sure you want to delete this event?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Törlés',
+        text: 'Delete',
         style: 'destructive',
         onPress: async () => {
           await deleteDoc(doc(db, 'teams', activeTeamId!, 'events', eventId));
@@ -178,7 +179,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
   const saveSquad = async () => {
     const selected = Array.from(squadSelection);
     if (selected.length < 5 || selected.length > 12) {
-      Alert.alert('Hiba', `A keret 5-12 fő lehet (most: ${selected.length})`);
+      Alert.alert('Error', `Squad must be 5-12 players (current: ${selected.length})`);
       return;
     }
 
@@ -187,17 +188,17 @@ export default function EventDetailScreen({ route, navigation }: Props) {
       await updateDoc(doc(db, 'teams', activeTeamId!, 'events', eventId), { squad: selected });
       setSelectingSquad(false);
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült menteni a keretet');
+      Alert.alert('Error', 'Failed to save squad');
     } finally {
       setSaving(false);
     }
   };
 
   const clearSquad = () => {
-    Alert.alert('Keret törlése', 'Biztosan törlöd a keretet?', [
-      { text: 'Mégsem', style: 'cancel' },
+    Alert.alert('Clear squad', 'Are you sure you want to clear the squad?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Törlés',
+        text: 'Delete',
         style: 'destructive',
         onPress: async () => {
           await updateDoc(doc(db, 'teams', activeTeamId!, 'events', eventId), { squad: [] });
@@ -208,10 +209,10 @@ export default function EventDetailScreen({ route, navigation }: Props) {
 
   const formatFullDate = (timestamp: Timestamp) => {
     const d = timestamp.toDate();
-    const days = ['Vasárnap', 'Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek', 'Szombat'];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = [
-      'január', 'február', 'március', 'április', 'május', 'június',
-      'július', 'augusztus', 'szeptember', 'október', 'november', 'december',
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
     ];
     return `${d.getFullYear()}. ${months[d.getMonth()]} ${d.getDate()}. ${days[d.getDay()]}\n${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
   };
@@ -251,20 +252,20 @@ export default function EventDetailScreen({ route, navigation }: Props) {
           color={colors.text}
         />
         <Text style={styles.typeLabel}>
-          {isMatch ? 'Meccs' : 'Edzés'}
+          {isMatch ? 'Match' : 'Training'}
         </Text>
       </View>
 
       {editing ? (
         <>
-          <Text style={styles.editLabel}>Név</Text>
+          <Text style={styles.editLabel}>Name</Text>
           <TextInput
             style={styles.editInput}
             value={editTitle}
             onChangeText={setEditTitle}
             placeholderTextColor={colors.textSecondary}
           />
-          <Text style={styles.editLabel}>Dátum (ÉÉÉÉ-HH-NN)</Text>
+          <Text style={styles.editLabel}>Date (YYYY-MM-DD)</Text>
           <TextInput
             style={styles.editInput}
             value={editDateStr}
@@ -272,7 +273,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
             placeholderTextColor={colors.textSecondary}
             keyboardType="numbers-and-punctuation"
           />
-          <Text style={styles.editLabel}>Időpont (ÓÓ:PP)</Text>
+          <Text style={styles.editLabel}>Time (HH:MM)</Text>
           <TextInput
             style={styles.editInput}
             value={editTimeStr}
@@ -280,7 +281,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
             placeholderTextColor={colors.textSecondary}
             keyboardType="numbers-and-punctuation"
           />
-          <Text style={styles.editLabel}>Helyszín</Text>
+          <Text style={styles.editLabel}>Location</Text>
           <TextInput
             style={styles.editInput}
             value={editLocation}
@@ -293,13 +294,13 @@ export default function EventDetailScreen({ route, navigation }: Props) {
               onPress={saveEdit}
               disabled={saving}
             >
-              <Text style={styles.editSaveText}>{saving ? 'Mentés...' : 'Mentés'}</Text>
+              <Text style={styles.editSaveText}>{saving ? 'Saving...' : 'Save'}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.editCancelButton}
               onPress={() => setEditing(false)}
             >
-              <Text style={styles.editCancelText}>Mégsem</Text>
+              <Text style={styles.editCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -332,7 +333,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
               <View style={styles.detailRow}>
                 <Ionicons name="people-outline" size={18} color={colors.textSecondary} />
                 <Text style={styles.detailText}>
-                  vs {event.opponent} ({event.isHome ? 'Hazai' : 'Idegen'})
+                  vs {event.opponent} ({event.isHome ? 'Home' : 'Away'})
                 </Text>
               </View>
             )}
@@ -341,18 +342,18 @@ export default function EventDetailScreen({ route, navigation }: Props) {
       )}
 
       {/* ===== MATCH: Availability + Squad ===== */}
-      {isMatch && !isPast && !editing && (
+      {isMatch && !isPast && !editing && !isGuest && (
         <>
           {/* Availability buttons */}
           <View style={styles.rsvpSection}>
-            <Text style={styles.sectionTitle}>Rendelkezésre állsz?</Text>
+            <Text style={styles.sectionTitle}>Are you available?</Text>
             <View style={styles.rsvpButtons}>
               <TouchableOpacity
                 style={[styles.rsvpButton, styles.rsvpYes, myRsvp === 'yes' && styles.rsvpActive]}
                 onPress={() => handleRsvp('yes')}
               >
                 <Ionicons name="checkmark-circle" size={20} color={myRsvp === 'yes' ? colors.text : '#00b894'} />
-                <Text style={[styles.rsvpText, myRsvp === 'yes' && styles.rsvpTextActive]}>Igen</Text>
+                <Text style={[styles.rsvpText, myRsvp === 'yes' && styles.rsvpTextActive]}>Yes</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -360,7 +361,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
                 onPress={() => handleRsvp('no')}
               >
                 <Ionicons name="close-circle" size={20} color={myRsvp === 'no' ? colors.text : colors.error} />
-                <Text style={[styles.rsvpText, myRsvp === 'no' && styles.rsvpTextActive]}>Nem</Text>
+                <Text style={[styles.rsvpText, myRsvp === 'no' && styles.rsvpTextActive]}>No</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -369,7 +370,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
           {hasSquad && !selectingSquad && (
             <View style={styles.squadBanner}>
               <View style={styles.squadHeader}>
-                <Text style={styles.sectionTitle}>Keret ({event.squad!.length} fő)</Text>
+                <Text style={styles.sectionTitle}>Squad ({event.squad!.length})</Text>
                 {isAdmin && (
                   <View style={{ flexDirection: 'row', gap: spacing.sm }}>
                     <TouchableOpacity onPress={startSquadSelect}>
@@ -384,7 +385,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
               {isInSquad && (
                 <View style={styles.inSquadBadge}>
                   <Ionicons name="checkmark-circle" size={16} color="#00b894" />
-                  <Text style={styles.inSquadText}>Keretben vagy!</Text>
+                  <Text style={styles.inSquadText}>You're in the squad!</Text>
                 </View>
               )}
               {event.squad!.map((uid) => {
@@ -405,10 +406,10 @@ export default function EventDetailScreen({ route, navigation }: Props) {
           {isAdmin && selectingSquad && (
             <View style={styles.squadSelectSection}>
               <Text style={styles.sectionTitle}>
-                Keret kiválasztása ({squadSelection.size} fő)
+                Select squad ({squadSelection.size})
               </Text>
               {availablePlayers.length === 0 && (
-                <Text style={styles.emptyText}>Még senki nem jelezte hogy elérhető.</Text>
+                <Text style={styles.emptyText}>Nobody has indicated availability yet.</Text>
               )}
               {availablePlayers.map((player) => {
                 const selected = squadSelection.has(player.userId);
@@ -436,14 +437,14 @@ export default function EventDetailScreen({ route, navigation }: Props) {
                   disabled={saving}
                 >
                   <Text style={styles.editSaveText}>
-                    {saving ? 'Mentés...' : `Keret hirdetése (${squadSelection.size})`}
+                    {saving ? 'Saving...' : `Announce squad (${squadSelection.size})`}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.editCancelButton}
                   onPress={() => setSelectingSquad(false)}
                 >
-                  <Text style={styles.editCancelText}>Mégsem</Text>
+                  <Text style={styles.editCancelText}>Cancel</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -453,27 +454,27 @@ export default function EventDetailScreen({ route, navigation }: Props) {
           {isAdmin && !selectingSquad && !hasSquad && availablePlayers.length > 0 && (
             <TouchableOpacity style={styles.announceSquadButton} onPress={startSquadSelect}>
               <Ionicons name="people" size={18} color={colors.text} />
-              <Text style={styles.announceSquadText}>Keret hirdetése</Text>
+              <Text style={styles.announceSquadText}>Announce squad</Text>
             </TouchableOpacity>
           )}
 
           {/* Availability summary */}
           <View style={styles.rsvpSummary}>
-            <Text style={styles.sectionTitle}>Elérhetőség</Text>
+            <Text style={styles.sectionTitle}>Availability</Text>
             <View style={styles.rsvpCounts}>
               <View style={styles.countBadge}>
                 <Text style={[styles.countNumber, { color: '#00b894' }]}>{availablePlayers.length}</Text>
-                <Text style={styles.countLabel}>Elérhető</Text>
+                <Text style={styles.countLabel}>Available</Text>
               </View>
               <View style={styles.countBadge}>
                 <Text style={[styles.countNumber, { color: colors.error }]}>{unavailablePlayers.length}</Text>
-                <Text style={styles.countLabel}>Nem elérhető</Text>
+                <Text style={styles.countLabel}>Not available</Text>
               </View>
             </View>
 
             {availablePlayers.length > 0 && (
               <View style={styles.nameSection}>
-                <Text style={[styles.nameLabel, { color: '#00b894' }]}>Elérhetők:</Text>
+                <Text style={[styles.nameLabel, { color: '#00b894' }]}>Available:</Text>
                 <Text style={styles.nameList}>
                   {availablePlayers.map((r) => r.userName).join(', ')}
                 </Text>
@@ -481,7 +482,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
             )}
             {unavailablePlayers.length > 0 && (
               <View style={styles.nameSection}>
-                <Text style={[styles.nameLabel, { color: colors.error }]}>Nem elérhetők:</Text>
+                <Text style={[styles.nameLabel, { color: colors.error }]}>Not available:</Text>
                 <Text style={styles.nameList}>
                   {unavailablePlayers.map((r) => r.userName).join(', ')}
                 </Text>
@@ -494,7 +495,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
       {/* ===== MATCH PAST: show squad if existed ===== */}
       {isMatch && isPast && hasSquad && (
         <View style={styles.squadBanner}>
-          <Text style={styles.sectionTitle}>Keret ({event.squad!.length} fő)</Text>
+          <Text style={styles.sectionTitle}>Squad ({event.squad!.length})</Text>
           {event.squad!.map((uid) => {
             const player = rsvps.find((r) => r.userId === uid);
             return (
@@ -512,14 +513,14 @@ export default function EventDetailScreen({ route, navigation }: Props) {
       {/* ===== TRAINING: original 3-way RSVP ===== */}
       {!isMatch && !isPast && !editing && (
         <View style={styles.rsvpSection}>
-          <Text style={styles.sectionTitle}>Jössz?</Text>
+          <Text style={styles.sectionTitle}>Are you coming?</Text>
           <View style={styles.rsvpButtons}>
             <TouchableOpacity
               style={[styles.rsvpButton, styles.rsvpYes, myRsvp === 'yes' && styles.rsvpActive]}
               onPress={() => handleRsvp('yes')}
             >
               <Ionicons name="checkmark-circle" size={20} color={myRsvp === 'yes' ? colors.text : '#00b894'} />
-              <Text style={[styles.rsvpText, myRsvp === 'yes' && styles.rsvpTextActive]}>Megyek</Text>
+              <Text style={[styles.rsvpText, myRsvp === 'yes' && styles.rsvpTextActive]}>Going</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -527,7 +528,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
               onPress={() => handleRsvp('maybe')}
             >
               <Ionicons name="help-circle" size={20} color={myRsvp === 'maybe' ? colors.text : '#fdcb6e'} />
-              <Text style={[styles.rsvpText, myRsvp === 'maybe' && styles.rsvpTextActive]}>Nem tudom</Text>
+              <Text style={[styles.rsvpText, myRsvp === 'maybe' && styles.rsvpTextActive]}>Maybe</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -535,7 +536,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
               onPress={() => handleRsvp('no')}
             >
               <Ionicons name="close-circle" size={20} color={myRsvp === 'no' ? colors.text : colors.error} />
-              <Text style={[styles.rsvpText, myRsvp === 'no' && styles.rsvpTextActive]}>Nem megyek</Text>
+              <Text style={[styles.rsvpText, myRsvp === 'no' && styles.rsvpTextActive]}>Not going</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -544,25 +545,25 @@ export default function EventDetailScreen({ route, navigation }: Props) {
       {/* Training RSVP summary */}
       {!isMatch && !editing && (
         <View style={styles.rsvpSummary}>
-          <Text style={styles.sectionTitle}>Résztvevők</Text>
+          <Text style={styles.sectionTitle}>Participants</Text>
           <View style={styles.rsvpCounts}>
             <View style={styles.countBadge}>
               <Text style={[styles.countNumber, { color: '#00b894' }]}>{yesCount}</Text>
-              <Text style={styles.countLabel}>Jön</Text>
+              <Text style={styles.countLabel}>Going</Text>
             </View>
             <View style={styles.countBadge}>
               <Text style={[styles.countNumber, { color: '#fdcb6e' }]}>{maybeCount}</Text>
-              <Text style={styles.countLabel}>Bizonytalan</Text>
+              <Text style={styles.countLabel}>Maybe</Text>
             </View>
             <View style={styles.countBadge}>
               <Text style={[styles.countNumber, { color: colors.error }]}>{noCount}</Text>
-              <Text style={styles.countLabel}>Nem jön</Text>
+              <Text style={styles.countLabel}>Not going</Text>
             </View>
           </View>
 
           {rsvps.filter((r) => r.status === 'yes').length > 0 && (
             <View style={styles.nameSection}>
-              <Text style={[styles.nameLabel, { color: '#00b894' }]}>Jönnek:</Text>
+              <Text style={[styles.nameLabel, { color: '#00b894' }]}>Going:</Text>
               <Text style={styles.nameList}>
                 {rsvps.filter((r) => r.status === 'yes').map((r) => r.userName).join(', ')}
               </Text>
@@ -570,7 +571,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
           )}
           {rsvps.filter((r) => r.status === 'maybe').length > 0 && (
             <View style={styles.nameSection}>
-              <Text style={[styles.nameLabel, { color: '#fdcb6e' }]}>Bizonytalanok:</Text>
+              <Text style={[styles.nameLabel, { color: '#fdcb6e' }]}>Maybe:</Text>
               <Text style={styles.nameList}>
                 {rsvps.filter((r) => r.status === 'maybe').map((r) => r.userName).join(', ')}
               </Text>
@@ -578,7 +579,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
           )}
           {rsvps.filter((r) => r.status === 'no').length > 0 && (
             <View style={styles.nameSection}>
-              <Text style={[styles.nameLabel, { color: colors.error }]}>Nem jönnek:</Text>
+              <Text style={[styles.nameLabel, { color: colors.error }]}>Not going:</Text>
               <Text style={styles.nameList}>
                 {rsvps.filter((r) => r.status === 'no').map((r) => r.userName).join(', ')}
               </Text>
@@ -591,7 +592,7 @@ export default function EventDetailScreen({ route, navigation }: Props) {
       {isAdmin && !editing && !selectingSquad && (
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
           <Ionicons name="trash-outline" size={18} color={colors.error} />
-          <Text style={styles.deleteText}>Esemény törlése</Text>
+          <Text style={styles.deleteText}>Delete event</Text>
         </TouchableOpacity>
       )}
     </ScrollView>

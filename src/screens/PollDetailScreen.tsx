@@ -95,7 +95,7 @@ export default function PollDetailScreen({ route, navigation }: Props) {
         });
       }
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült szavazni');
+      Alert.alert('Error', 'Failed to vote');
     } finally {
       setVoting(false);
     }
@@ -103,11 +103,11 @@ export default function PollDetailScreen({ route, navigation }: Props) {
 
   const handleToggleClose = async () => {
     if (!poll || !isAdmin) return;
-    const action = poll.closed ? 'újranyitni' : 'lezárni';
-    Alert.alert('Megerősítés', `Biztosan szeretnéd ${action} a szavazást?`, [
-      { text: 'Mégsem', style: 'cancel' },
+    const action = poll.closed ? 'reopen' : 'close';
+    Alert.alert('Confirm', `Are you sure you want to ${action} this poll?`, [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: poll.closed ? 'Újranyitás' : 'Lezárás',
+        text: poll.closed ? 'Reopen' : 'Close',
         onPress: async () => {
           await updateDoc(doc(db, 'teams', activeTeamId!, 'polls', pollId), { closed: !poll.closed });
 
@@ -117,15 +117,15 @@ export default function PollDetailScreen({ route, navigation }: Props) {
             const resultLines = poll.options.map((opt) => {
               const count = votes.filter((v) => (v.optionIds || []).includes(opt.id)).length;
               const pct = totalV > 0 ? Math.round((count / totalV) * 100) : 0;
-              return `  ${opt.text}: ${count} szavazat (${pct}%)`;
+              return `  ${opt.text}: ${count} vote(s) (${pct}%)`;
             });
 
-            const chatText = `"${poll.question}"\n\n${resultLines.join('\n')}\n\nÖsszesen ${totalV} szavazó.`;
+            const chatText = `"${poll.question}"\n\n${resultLines.join('\n')}\n\nTotal ${totalV} voter(s).`;
 
             await addDoc(collection(db, 'teams', activeTeamId!, 'messages'), {
               text: chatText,
               senderId: 'system',
-              senderName: 'Szavazás',
+              senderName: 'Polls',
               createdAt: serverTimestamp(),
               type: 'system',
             });
@@ -137,10 +137,10 @@ export default function PollDetailScreen({ route, navigation }: Props) {
 
   const handleDelete = () => {
     if (!isAdmin) return;
-    Alert.alert('Törlés', 'Biztosan törlöd a szavazást?', [
-      { text: 'Mégsem', style: 'cancel' },
+    Alert.alert('Delete', 'Are you sure you want to delete this poll?', [
+      { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Törlés',
+        text: 'Delete',
         style: 'destructive',
         onPress: async () => {
           await deleteDoc(doc(db, 'teams', activeTeamId!, 'polls', pollId));
@@ -172,13 +172,13 @@ export default function PollDetailScreen({ route, navigation }: Props) {
           size={16}
           color={colors.text}
         />
-        <Text style={styles.statusText}>{poll.closed ? 'Lezárt' : 'Aktív'}</Text>
+        <Text style={styles.statusText}>{poll.closed ? 'Closed' : 'Active'}</Text>
       </View>
 
       <Text style={styles.question}>{poll.question}</Text>
 
       <Text style={styles.voteCount}>
-        {totalVotes} szavazó{isMultiple ? ' · Több válasz' : ''}
+        {totalVotes} voter(s){isMultiple ? ' · Multiple choice' : ''}
       </Text>
 
       {/* Options */}
@@ -232,7 +232,7 @@ export default function PollDetailScreen({ route, navigation }: Props) {
       {/* Voter names (visible after voting or when closed) */}
       {(hasVoted || poll.closed) && totalVotes > 0 && (
         <View style={styles.votersSection}>
-          <Text style={styles.sectionTitle}>Szavazók</Text>
+          <Text style={styles.sectionTitle}>Voters</Text>
           {poll.options.map((option) => {
             const optionVotes = votes.filter((v) => (v.optionIds || []).includes(option.id));
             if (optionVotes.length === 0) return null;
@@ -258,13 +258,13 @@ export default function PollDetailScreen({ route, navigation }: Props) {
               color={poll.closed ? '#00b894' : '#fdcb6e'}
             />
             <Text style={[styles.adminButtonText, { color: poll.closed ? '#00b894' : '#fdcb6e' }]}>
-              {poll.closed ? 'Újranyitás' : 'Lezárás'}
+              {poll.closed ? 'Reopen' : 'Close'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.adminButton} onPress={handleDelete}>
             <Ionicons name="trash-outline" size={18} color={colors.error} />
-            <Text style={[styles.adminButtonText, { color: colors.error }]}>Törlés</Text>
+            <Text style={[styles.adminButtonText, { color: colors.error }]}>Delete</Text>
           </TouchableOpacity>
         </View>
       )}

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   View,
   Text,
@@ -13,6 +14,7 @@ import {
   Image,
   ActionSheetIOS,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import {
   updateProfile,
@@ -25,13 +27,14 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { colors, spacing } from '../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../hooks/useAdmin';
 import { useTeam } from '../contexts/TeamContext';
 import { pickImage, takePhoto, uploadProfilePhoto, savePhotoUrl } from '../services/profilePhoto';
 
 const POSITION_OPTIONS = ['PG', 'SG', 'SF', 'PF', 'C'];
 const JERSEY_SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const ROLE_OPTIONS = ['Játékos', 'Edző', 'Adminisztráció'];
+const ROLE_OPTIONS = ['Player', 'Coach', 'Admin'];
 
 interface PlayerProfile {
   role: string;           // Szerep
@@ -42,6 +45,7 @@ interface PlayerProfile {
   weight: string;         // Súly (kg)
   phone: string;          // Telefonszám
   jerseySize: string;     // Mezméret
+  medicalExpiry: string;  // Medical clearance expiry
 }
 
 const EMPTY_PROFILE: PlayerProfile = {
@@ -53,18 +57,23 @@ const EMPTY_PROFILE: PlayerProfile = {
   weight: '',
   phone: '',
   jerseySize: '',
+  medicalExpiry: '',
 };
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }: any) {
   const user = auth.currentUser;
   const isAdmin = useAdmin();
-  const { activeTeamId, activeTeam } = useTeam();
+  const { activeTeamId, activeTeam, membership } = useTeam();
+  const isGuest = membership?.role === 'guest';
+  const insets = useSafeAreaInsets();
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [isEditingName, setIsEditingName] = useState(false);
   const [memberSince, setMemberSince] = useState('');
   const [playerProfile, setPlayerProfile] = useState<PlayerProfile>(EMPTY_PROFILE);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
 
   // Profile photo
   const [photoURL, setPhotoURL] = useState<string | null>(user?.photoURL || null);
@@ -125,6 +134,7 @@ export default function ProfileScreen() {
             weight: data.weight || '',
             phone: data.phone || '',
             jerseySize: data.jerseySize || '',
+            medicalExpiry: data.medicalExpiry || '',
           });
         }
       }
@@ -141,7 +151,7 @@ export default function ProfileScreen() {
       await savePhotoUrl(user.uid, url);
       setPhotoURL(url);
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült feltölteni a képet');
+      Alert.alert('Error', 'Failed to upload photo');
     } finally {
       setUploadingPhoto(false);
     }
@@ -151,7 +161,7 @@ export default function ProfileScreen() {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['Mégsem', 'Fotó készítése', 'Galéria'],
+          options: ['Cancel', 'Take photo', 'Gallery'],
           cancelButtonIndex: 0,
         },
         async (index) => {
@@ -162,17 +172,17 @@ export default function ProfileScreen() {
         }
       );
     } else {
-      Alert.alert('Profilkép', 'Válassz forrást', [
-        { text: 'Mégsem', style: 'cancel' },
+      Alert.alert('Profile photo', 'Choose source', [
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Fotó készítése',
+          text: 'Take photo',
           onPress: async () => {
             const uri = await takePhoto();
             if (uri) handlePhotoUpload(uri);
           },
         },
         {
-          text: 'Galéria',
+          text: 'Gallery',
           onPress: async () => {
             const uri = await pickImage();
             if (uri) handlePhotoUpload(uri);
@@ -191,9 +201,9 @@ export default function ProfileScreen() {
         displayName: displayName.trim(),
       });
       setIsEditingName(false);
-      Alert.alert('Siker', 'Név frissítve!');
+      Alert.alert('Success', 'Name updated!');
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült frissíteni a nevet');
+      Alert.alert('Error', 'Failed to update name');
     } finally {
       setLoading(false);
     }
@@ -216,7 +226,7 @@ export default function ProfileScreen() {
       setPlayerProfile((prev) => ({ ...prev, [field]: editValue.trim() }));
       setEditingField(null);
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült menteni');
+      Alert.alert('Error', 'Failed to save');
     } finally {
       setLoading(false);
     }
@@ -230,7 +240,7 @@ export default function ProfileScreen() {
       await updateDoc(memberDocPath, { [field]: newValue });
       setPlayerProfile((prev) => ({ ...prev, [field]: newValue }));
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült menteni');
+      Alert.alert('Error', 'Failed to save');
     }
   };
 
@@ -244,7 +254,7 @@ export default function ProfileScreen() {
       await updateDoc(memberDocPath, { [field]: newValue });
       setPlayerProfile((prev) => ({ ...prev, [field]: newValue }));
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült menteni');
+      Alert.alert('Error', 'Failed to save');
     }
   };
 
@@ -255,7 +265,7 @@ export default function ProfileScreen() {
         [`notificationPrefs.${key}`]: value,
       });
     } catch (e) {
-      Alert.alert('Hiba', 'Nem sikerült menteni');
+      Alert.alert('Error', 'Failed to save');
     }
   };
 
@@ -263,15 +273,15 @@ export default function ProfileScreen() {
     if (!user || !user.email) return;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Hiba', 'Minden mező kitöltése kötelező');
+      Alert.alert('Error', 'All fields are required');
       return;
     }
     if (newPassword.length < 6) {
-      Alert.alert('Hiba', 'Az új jelszónak legalább 6 karakter hosszúnak kell lennie');
+      Alert.alert('Error', 'New password must be at least 6 characters');
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('Hiba', 'Az új jelszavak nem egyeznek');
+      Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
@@ -284,12 +294,12 @@ export default function ProfileScreen() {
       setNewPassword('');
       setConfirmPassword('');
       setShowPasswordChange(false);
-      Alert.alert('Siker', 'Jelszó megváltoztatva!');
+      Alert.alert('Success', 'Password changed!');
     } catch (e: any) {
       if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
-        Alert.alert('Hiba', 'Hibás jelenlegi jelszó');
+        Alert.alert('Error', 'Current password is incorrect');
       } else {
-        Alert.alert('Hiba', 'Nem sikerült megváltoztatni a jelszót');
+        Alert.alert('Error', 'Failed to change password');
       }
     } finally {
       setLoading(false);
@@ -297,9 +307,9 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert('Kilépés', 'Biztosan ki szeretnél lépni?', [
-      { text: 'Mégsem', style: 'cancel' },
-      { text: 'Kilépés', style: 'destructive', onPress: () => signOut(auth) },
+    Alert.alert('Log out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log out', style: 'destructive', onPress: () => signOut(auth) },
     ]);
   };
 
@@ -326,7 +336,7 @@ export default function ProfileScreen() {
             }}
           >
             <Text style={styles.editButton}>
-              {isEditing ? 'Mentés' : 'Szerkesztés'}
+              {isEditing ? 'Save' : 'Edit'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -343,7 +353,7 @@ export default function ProfileScreen() {
           />
         ) : (
           <Text style={[styles.cardValue, !playerProfile[field] && styles.emptyValue]}>
-            {playerProfile[field] || 'Nincs megadva'}
+            {playerProfile[field] || 'Not set'}
           </Text>
         )}
       </View>
@@ -429,6 +439,7 @@ export default function ProfileScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 90 : 0}
     >
       <ScrollView contentContainerStyle={styles.content}>
         {/* Avatar */}
@@ -458,21 +469,33 @@ export default function ProfileScreen() {
           ) : null}
           <View style={[styles.roleBadge, isAdmin ? styles.roleBadgeAdmin : styles.roleBadgeUser]}>
             <Ionicons
-              name={isAdmin ? 'shield-checkmark' : 'person'}
+              name={isAdmin ? 'shield-checkmark' : isGuest ? 'eye-outline' : 'person'}
               size={14}
               color={isAdmin ? colors.accent : colors.textSecondary}
             />
             <Text style={[styles.roleBadgeText, isAdmin && styles.roleBadgeTextAdmin]}>
-              {isAdmin ? 'Admin' : 'User'}
+              {isAdmin ? 'Admin' : isGuest ? 'Guest' : 'User'}
             </Text>
           </View>
         </View>
+
+        {/* Team Members button (admin only) */}
+        {isAdmin && (
+          <TouchableOpacity
+            style={styles.membersButton}
+            onPress={() => navigation.navigate('Members')}
+          >
+            <Ionicons name="people-outline" size={20} color={colors.text} />
+            <Text style={styles.membersButtonText}>Team members</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
 
         {/* Name */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="person-outline" size={20} color={colors.textSecondary} />
-            <Text style={styles.cardLabel}>Név</Text>
+            <Text style={styles.cardLabel}>Name</Text>
             <TouchableOpacity
               onPress={() => {
                 if (isEditingName) {
@@ -483,7 +506,7 @@ export default function ProfileScreen() {
               }}
             >
               <Text style={styles.editButton}>
-                {isEditingName ? 'Mentés' : 'Szerkesztés'}
+                {isEditingName ? 'Save' : 'Edit'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -496,12 +519,12 @@ export default function ProfileScreen() {
               onSubmitEditing={handleSaveName}
             />
           ) : (
-            <Text style={styles.cardValue}>{user?.displayName || 'Ismeretlen'}</Text>
+            <Text style={styles.cardValue}>{user?.displayName || 'Unknown'}</Text>
           )}
         </View>
 
         {/* Role */}
-        {renderOptionField('shield-outline', 'Szerepkör', 'role', ROLE_OPTIONS)}
+        {/* Role is managed by admins via Members screen — not editable here */}
 
         {/* Email (read-only) */}
         <View style={styles.card}>
@@ -517,33 +540,94 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="people-outline" size={20} color={colors.textSecondary} />
-              <Text style={styles.cardLabel}>Aktív csapat</Text>
+              <Text style={styles.cardLabel}>Active team</Text>
             </View>
             <Text style={styles.cardValue}>{activeTeam.name}</Text>
           </View>
         )}
 
         {/* Section: Player data */}
-        <Text style={styles.sectionHeader}>Játékos adatok</Text>
+        <Text style={styles.sectionHeader}>Player info</Text>
 
-        {renderEditableField('card-outline', 'Személyi ig. szám', 'idNumber', 'default', 'pl. 123456AB')}
-        {renderEditableField('shirt-outline', 'Mezszám', 'jerseyNumber', 'numeric', 'pl. 7')}
-        {renderMultiOptionField('basketball-outline', 'Poszt', 'position', POSITION_OPTIONS)}
-        {renderEditableField('resize-outline', 'Magasság (cm)', 'height', 'numeric', 'pl. 185')}
-        {renderEditableField('barbell-outline', 'Súly (kg)', 'weight', 'numeric', 'pl. 80')}
-        {renderEditableField('call-outline', 'Telefonszám', 'phone', 'phone-pad', 'pl. +36301234567')}
-        {renderOptionField('shirt-outline', 'Mezméret', 'jerseySize', JERSEY_SIZE_OPTIONS)}
+        {renderEditableField('card-outline', 'ID number', 'idNumber', 'default', 'e.g. 123456AB')}
+        {renderEditableField('shirt-outline', 'Jersey number', 'jerseyNumber', 'numeric', 'e.g. 7')}
+        {renderMultiOptionField('basketball-outline', 'Position', 'position', POSITION_OPTIONS)}
+        {renderEditableField('resize-outline', 'Height (cm)', 'height', 'numeric', 'e.g. 185')}
+        {renderEditableField('barbell-outline', 'Weight (kg)', 'weight', 'numeric', 'e.g. 80')}
+        {renderEditableField('call-outline', 'Phone number', 'phone', 'phone-pad', 'e.g. +36301234567')}
+        {renderOptionField('shirt-outline', 'Jersey size', 'jerseySize', JERSEY_SIZE_OPTIONS)}
+        {/* Medical clearance expiry — date picker */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="medical-outline" size={20} color={colors.textSecondary} />
+            <Text style={styles.cardLabel}>Medical clearance expiry</Text>
+            <TouchableOpacity onPress={() => {
+              setTempDate(playerProfile.medicalExpiry ? new Date(playerProfile.medicalExpiry) : new Date());
+              setShowDatePicker(true);
+            }}>
+              <Text style={styles.editButton}>
+                {playerProfile.medicalExpiry ? 'Change' : 'Set'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.fieldDisplayValue, !playerProfile.medicalExpiry && styles.fieldDisplayEmpty]}>
+            {playerProfile.medicalExpiry || 'Not set'}
+          </Text>
+        </View>
+        <Modal visible={showDatePicker} transparent animationType="fade">
+          <View style={styles.dateModalOverlay}>
+            <View style={styles.dateModalContent}>
+              <Text style={styles.dateModalTitle}>Medical clearance expiry</Text>
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display="spinner"
+                onChange={(_event: DateTimePickerEvent, selectedDate?: Date) => {
+                  if (selectedDate) setTempDate(selectedDate);
+                }}
+                minimumDate={new Date()}
+                maximumDate={new Date(2030, 11, 31)}
+                textColor={colors.text}
+              />
+              <View style={styles.dateModalButtons}>
+                <TouchableOpacity
+                  style={styles.dateModalButton}
+                  onPress={() => setShowDatePicker(false)}
+                >
+                  <Text style={styles.dateModalButtonCancel}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dateModalButton, styles.dateModalButtonOk]}
+                  onPress={async () => {
+                    if (memberDocPath) {
+                      const formatted = tempDate.toISOString().split('T')[0];
+                      try {
+                        await updateDoc(memberDocPath, { medicalExpiry: formatted });
+                        setPlayerProfile((prev) => ({ ...prev, medicalExpiry: formatted }));
+                      } catch (e) {
+                        Alert.alert('Error', 'Failed to save');
+                      }
+                    }
+                    setShowDatePicker(false);
+                  }}
+                >
+                  <Text style={styles.dateModalButtonOkText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* Notifications */}
-        <Text style={styles.sectionHeader}>Értesítések</Text>
+        <Text style={styles.sectionHeader}>Notifications</Text>
 
         <View style={styles.card}>
           <View style={styles.notifRow}>
             <View style={styles.notifInfo}>
               <Ionicons name="chatbubbles-outline" size={20} color={colors.textSecondary} />
               <View>
-                <Text style={styles.notifLabel}>Chat üzenetek</Text>
-                <Text style={styles.notifDesc}>Értesítés új üzenet érkezésekor</Text>
+                <Text style={styles.notifLabel}>Chat messages</Text>
+                <Text style={styles.notifDesc}>Notify on new messages</Text>
               </View>
             </View>
             <Switch
@@ -563,8 +647,8 @@ export default function ProfileScreen() {
             <View style={styles.notifInfo}>
               <Ionicons name="bar-chart-outline" size={20} color={colors.textSecondary} />
               <View>
-                <Text style={styles.notifLabel}>Szavazások</Text>
-                <Text style={styles.notifDesc}>Értesítés szavazás lezárásakor</Text>
+                <Text style={styles.notifLabel}>Polls</Text>
+                <Text style={styles.notifDesc}>Notify when a poll closes</Text>
               </View>
             </View>
             <Switch
@@ -584,8 +668,8 @@ export default function ProfileScreen() {
             <View style={styles.notifInfo}>
               <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
               <View>
-                <Text style={styles.notifLabel}>Események</Text>
-                <Text style={styles.notifDesc}>Értesítés új vagy módosított eseményeknél</Text>
+                <Text style={styles.notifLabel}>Events</Text>
+                <Text style={styles.notifDesc}>Notify on new or updated events</Text>
               </View>
             </View>
             <Switch
@@ -601,14 +685,14 @@ export default function ProfileScreen() {
         </View>
 
         {/* Member since */}
-        <Text style={styles.sectionHeader}>Fiók</Text>
+        <Text style={styles.sectionHeader}>Account</Text>
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
-            <Text style={styles.cardLabel}>Tag mióta</Text>
+            <Text style={styles.cardLabel}>Member since</Text>
           </View>
-          <Text style={styles.cardValue}>{memberSince || 'Betöltés...'}</Text>
+          <Text style={styles.cardValue}>{memberSince || 'Loading...'}</Text>
         </View>
 
         {/* Password change */}
@@ -618,7 +702,7 @@ export default function ProfileScreen() {
         >
           <View style={styles.cardHeader}>
             <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} />
-            <Text style={styles.cardLabel}>Jelszó változtatás</Text>
+            <Text style={styles.cardLabel}>Change password</Text>
             <Ionicons
               name={showPasswordChange ? 'chevron-up' : 'chevron-down'}
               size={20}
@@ -631,7 +715,7 @@ export default function ProfileScreen() {
           <View style={styles.passwordSection}>
             <TextInput
               style={styles.input}
-              placeholder="Jelenlegi jelszó"
+              placeholder="Current password"
               placeholderTextColor={colors.textSecondary}
               value={currentPassword}
               onChangeText={setCurrentPassword}
@@ -639,7 +723,7 @@ export default function ProfileScreen() {
             />
             <TextInput
               style={styles.input}
-              placeholder="Új jelszó"
+              placeholder="New password"
               placeholderTextColor={colors.textSecondary}
               value={newPassword}
               onChangeText={setNewPassword}
@@ -647,7 +731,7 @@ export default function ProfileScreen() {
             />
             <TextInput
               style={styles.input}
-              placeholder="Új jelszó megerősítése"
+              placeholder="Confirm new password"
               placeholderTextColor={colors.textSecondary}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -659,7 +743,7 @@ export default function ProfileScreen() {
               disabled={loading}
             >
               <Text style={styles.passwordButtonText}>
-                {loading ? 'Mentés...' : 'Jelszó mentése'}
+                {loading ? 'Saving...' : 'Save password'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -668,7 +752,7 @@ export default function ProfileScreen() {
         {/* Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
-          <Text style={styles.logoutText}>Kilépés</Text>
+          <Text style={styles.logoutText}>Log out</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -759,6 +843,75 @@ const styles = StyleSheet.create({
   },
   roleBadgeTextAdmin: {
     color: colors.accent,
+  },
+  membersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  membersButtonText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  fieldDisplayValue: {
+    fontSize: 15,
+    color: colors.text,
+    paddingTop: spacing.xs,
+  },
+  fieldDisplayEmpty: {
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  dateModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dateModalContent: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: spacing.lg,
+    width: '85%',
+    alignItems: 'center',
+  },
+  dateModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  dateModalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.md,
+    width: '100%',
+  },
+  dateModalButton: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: colors.cardLight,
+  },
+  dateModalButtonCancel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  dateModalButtonOk: {
+    backgroundColor: colors.accent,
+  },
+  dateModalButtonOkText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
   },
   sectionHeader: {
     fontSize: 13,
