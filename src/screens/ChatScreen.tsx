@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  AppState,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -19,6 +20,9 @@ import {
   onSnapshot,
   addDoc,
   serverTimestamp,
+  Timestamp,
+  disableNetwork,
+  enableNetwork,
 } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { Message } from '../types';
@@ -42,23 +46,58 @@ export default function ChatScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'teams', activeTeamId!, 'messages'),
-      orderBy('createdAt', 'asc'),
-      limit(100)
-    );
+    if (!activeTeamId) return;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs: Message[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Message[];
-      setMessages(msgs);
-      setLoading(false);
-    });
+    let unsubscribe: (() => void) | undefined;
+    let retryTimeout: ReturnType<typeof setTimeout>;
 
-    return unsubscribe;
+    const startListener = (attempt = 0) => {
+      const q = query(
+        collection(db, 'teams', activeTeamId, 'messages'),
+        orderBy('createdAt', 'asc'),
+        limit(100)
+      );
+
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        const msgs: Message[] = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as Message[];
+        // Sort by createdAt, falling back to clientTimestamp for pending messages
+        msgs.sort((a, b) => {
+          const timeA = (a.createdAt || (a as any).clientTimestamp)?.toMillis?.() || Date.now();
+          const timeB = (b.createdAt || (b as any).clientTimestamp)?.toMillis?.() || Date.now();
+          return timeA - timeB;
+        });
+        setMessages(msgs);
+        setLoading(false);
+      }, (error) => {
+        console.error('Chat listener error:', error);
+        if (attempt < 3) {
+          retryTimeout = setTimeout(() => startListener(attempt + 1), 1500);
+        } else {
+          setLoading(false);
+        }
+      });
+    };
+
+    startListener();
+
+    return () => {
+      unsubscribe?.();
+      clearTimeout(retryTimeout);
+    };
   }, [activeTeamId]);
+
+  // Force Firestore reconnect when app comes to foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        disableNetwork(db).then(() => enableNetwork(db));
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -84,9 +123,10 @@ export default function ChatScreen({ navigation }: Props) {
     await addDoc(collection(db, 'teams', activeTeamId!, 'messages'), {
       text,
       senderId: currentUser.uid,
-      senderName: currentUser.displayName || 'Ismeretlen',
+      senderName: currentUser.displayName || 'Unknown',
       senderPhotoURL: currentUser.photoURL || null,
       createdAt: serverTimestamp(),
+      clientTimestamp: Timestamp.now(),
       type: 'text',
     });
   };

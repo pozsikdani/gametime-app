@@ -32,8 +32,8 @@ service cloud.firestore {
     // Teams
     match /teams/{teamId} {
       allow read: if isTeamMember(teamId);
-      // Allow reading team doc for invite code lookup (unauthenticated users need this during registration)
-      allow list: if request.auth != null;
+      // Allow listing teams for invite code lookup (needed before registration, user not yet authenticated)
+      allow list: if true;
       allow create: if isSuperAdmin();
       allow update: if isTeamAdmin(teamId) || isSuperAdmin();
 

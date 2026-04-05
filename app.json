@@ -16,15 +16,17 @@
       "bundleIdentifier": "app.gametime.team",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "buildNumber": "4"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
-        "backgroundColor": "#0a0b0e"
+        "backgroundColor": "#E87722"
       },
-      "package": "app.gametime.team"
+      "package": "app.gametime.team",
+      "versionCode": 4
     },
     "extra": {
       "eas": {

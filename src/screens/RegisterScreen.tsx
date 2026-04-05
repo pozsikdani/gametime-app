@@ -53,6 +53,7 @@ export default function RegisterScreen({ navigation, route }: Props) {
       // Create team membership if invited to a team
       if (teamId) {
         await setDoc(doc(db, 'teams', teamId, 'members', user.uid), {
+          displayName: displayName.trim(),
           role: 'player',
           jerseyNumber: '',
           position: [],
@@ -61,6 +62,7 @@ export default function RegisterScreen({ navigation, route }: Props) {
           phone: '',
           jerseySize: '',
           idNumber: '',
+          medicalExpiry: '',
           joinedAt: serverTimestamp(),
         });
       }
