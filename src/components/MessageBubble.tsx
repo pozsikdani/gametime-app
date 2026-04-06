@@ -1,12 +1,19 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Message } from '../types';
 import { colors, spacing } from '../constants/theme';
+
+const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
 type Props = {
   message: Message;
   isOwn: boolean;
+  currentUid?: string;
+  showPicker?: boolean;
+  onLongPress?: (messageId: string) => void;
+  onReactionPress?: (messageId: string, emoji: string) => void;
 };
 
 function SenderAvatar({ name, photoURL }: { name: string; photoURL?: string }) {
@@ -20,13 +27,82 @@ function SenderAvatar({ name, photoURL }: { name: string; photoURL?: string }) {
   );
 }
 
-export default function MessageBubble({ message, isOwn }: Props) {
+function ReactionPills({
+  reactions,
+  currentUid,
+  onPress,
+}: {
+  reactions: { [emoji: string]: string[] };
+  currentUid?: string;
+  onPress?: (emoji: string) => void;
+}) {
+  const entries = Object.entries(reactions).filter(([, uids]) => uids.length > 0);
+  if (entries.length === 0) return null;
+
+  return (
+    <View style={styles.reactionsRow}>
+      {entries.map(([emoji, uids]) => {
+        const isMine = currentUid ? uids.includes(currentUid) : false;
+        return (
+          <TouchableOpacity
+            key={emoji}
+            style={[styles.reactionPill, isMine && styles.reactionPillMine]}
+            onPress={() => onPress?.(emoji)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.reactionEmoji}>{emoji}</Text>
+            {uids.length > 1 && <Text style={styles.reactionCount}>{uids.length}</Text>}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+function EmojiPickerBar({
+  isOwn,
+  onSelect,
+}: {
+  isOwn: boolean;
+  onSelect: (emoji: string) => void;
+}) {
+  return (
+    <View style={[styles.pickerBar, isOwn ? styles.pickerBarOwn : styles.pickerBarOther]}>
+      {REACTION_EMOJIS.map((emoji) => (
+        <TouchableOpacity
+          key={emoji}
+          style={styles.pickerEmoji}
+          onPress={() => onSelect(emoji)}
+        >
+          <Text style={styles.pickerEmojiText}>{emoji}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+export default function MessageBubble({ message, isOwn, currentUid, showPicker, onLongPress, onReactionPress }: Props) {
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+
+  const handleLongPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Animated.sequence([
+      Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+    ]).start();
+    onLongPress?.(message.id);
+  };
+
   const time = message.createdAt
     ? message.createdAt.toDate().toLocaleTimeString('hu-HU', {
         hour: '2-digit',
         minute: '2-digit',
       })
     : '';
+
+  const hasReactions = message.reactions && Object.keys(message.reactions).some(
+    (k) => message.reactions![k].length > 0
+  );
 
   if (message.type === 'system') {
     const isCalendar = message.senderName === 'Calendar';
@@ -53,10 +129,29 @@ export default function MessageBubble({ message, isOwn }: Props) {
   if (isOwn) {
     return (
       <View style={[styles.wrapper, styles.wrapperOwn]}>
-        <View style={[styles.bubble, styles.bubbleOwn]}>
-          <Text style={styles.text}>{message.text}</Text>
-          <Text style={styles.time}>{time}</Text>
-        </View>
+        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+          {showPicker && (
+            <EmojiPickerBar
+              isOwn
+              onSelect={(emoji) => onReactionPress?.(message.id, emoji)}
+            />
+          )}
+          <Pressable
+            style={[styles.bubble, styles.bubbleOwn]}
+            onLongPress={handleLongPress}
+            delayLongPress={300}
+          >
+            <Text style={styles.text}>{message.text}</Text>
+            <Text style={styles.time}>{time}</Text>
+          </Pressable>
+          {hasReactions && (
+            <ReactionPills
+              reactions={message.reactions!}
+              currentUid={currentUid}
+              onPress={(emoji) => onReactionPress?.(message.id, emoji)}
+            />
+          )}
+        </Animated.View>
       </View>
     );
   }
@@ -64,11 +159,30 @@ export default function MessageBubble({ message, isOwn }: Props) {
   return (
     <View style={[styles.wrapper, styles.wrapperOther]}>
       <SenderAvatar name={message.senderName} photoURL={message.senderPhotoURL} />
-      <View style={[styles.bubble, styles.bubbleOther]}>
-        <Text style={styles.sender}>{message.senderName}</Text>
-        <Text style={styles.text}>{message.text}</Text>
-        <Text style={styles.time}>{time}</Text>
-      </View>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        {showPicker && (
+          <EmojiPickerBar
+            isOwn={false}
+            onSelect={(emoji) => onReactionPress?.(message.id, emoji)}
+          />
+        )}
+        <Pressable
+          style={[styles.bubble, styles.bubbleOther]}
+          onLongPress={handleLongPress}
+          delayLongPress={300}
+        >
+          <Text style={styles.sender}>{message.senderName}</Text>
+          <Text style={styles.text}>{message.text}</Text>
+          <Text style={styles.time}>{time}</Text>
+        </Pressable>
+        {hasReactions && (
+          <ReactionPills
+            reactions={message.reactions!}
+            currentUid={currentUid}
+            onPress={(emoji) => onReactionPress?.(message.id, emoji)}
+          />
+        )}
+      </Animated.View>
     </View>
   );
 }
@@ -78,7 +192,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     marginBottom: spacing.sm,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   wrapperOwn: {
     justifyContent: 'flex-end',
@@ -106,7 +220,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   bubble: {
-    maxWidth: '75%',
+    maxWidth: 280,
     borderRadius: 16,
     padding: spacing.sm + 4,
     paddingBottom: spacing.sm,
@@ -135,6 +249,66 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     alignSelf: 'flex-end',
     marginTop: 4,
+  },
+  // Emoji picker bar (above bubble)
+  pickerBar: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderRadius: 24,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignSelf: 'flex-start',
+  },
+  pickerBarOwn: {
+    alignSelf: 'flex-end',
+  },
+  pickerBarOther: {
+    alignSelf: 'flex-start',
+  },
+  pickerEmoji: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickerEmojiText: {
+    fontSize: 20,
+  },
+  // Reaction pills
+  reactionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 2,
+    marginBottom: -4,
+    paddingHorizontal: 4,
+  },
+  reactionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 2,
+  },
+  reactionPillMine: {
+    borderColor: colors.accent,
+    backgroundColor: 'rgba(196, 30, 58, 0.15)',
+  },
+  reactionEmoji: {
+    fontSize: 14,
+  },
+  reactionCount: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: '600',
   },
   // System message styles
   systemWrapper: {

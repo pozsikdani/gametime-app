@@ -48,3 +48,38 @@ export async function savePhotoUrl(uid: string, url: string): Promise<void> {
     await updateProfile(user, { photoURL: url });
   }
 }
+
+// License card — no aspect ratio lock, higher quality
+export async function pickLicenseCard(): Promise<string | null> {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: false,
+    quality: 0.8,
+  });
+
+  if (result.canceled) return null;
+  return result.assets[0].uri;
+}
+
+export async function takeLicenseCardPhoto(): Promise<string | null> {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') return null;
+
+  const result = await ImagePicker.launchCameraAsync({
+    allowsEditing: false,
+    quality: 0.8,
+  });
+
+  if (result.canceled) return null;
+  return result.assets[0].uri;
+}
+
+export async function uploadLicenseCard(teamId: string, uid: string, uri: string): Promise<string> {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+
+  const storageRef = ref(storage, `licenseCards/${teamId}/${uid}.jpg`);
+  await uploadBytes(storageRef, blob);
+
+  return getDownloadURL(storageRef);
+}

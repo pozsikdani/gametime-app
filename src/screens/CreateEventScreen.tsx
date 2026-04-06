@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  Modal,
 } from 'react-native';
 import {
   collection,
@@ -15,6 +16,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { auth, db } from '../../firebaseConfig';
 import { EventType } from '../types';
@@ -31,8 +33,12 @@ export default function CreateEventScreen({ navigation }: Props) {
   const [location, setLocation] = useState('');
   const [opponent, setOpponent] = useState('');
   const [isHome, setIsHome] = useState(true);
-  const [dateStr, setDateStr] = useState('');  // "2025-10-15"
-  const [timeStr, setTimeStr] = useState('20:00');
+  const [eventDate, setEventDate] = useState<Date | null>(null);
+  const [eventTime, setEventTime] = useState(new Date(2026, 0, 1, 20, 0));
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
+  const [tempTime, setTempTime] = useState(new Date(2026, 0, 1, 20, 0));
   const [loading, setLoading] = useState(false);
   const { activeTeamId } = useTeam();
 
@@ -41,8 +47,8 @@ export default function CreateEventScreen({ navigation }: Props) {
       Alert.alert('Error', 'Please enter an event name');
       return;
     }
-    if (!dateStr.trim()) {
-      Alert.alert('Error', 'Please enter a date (YYYY-MM-DD)');
+    if (!eventDate) {
+      Alert.alert('Error', 'Please select a date');
       return;
     }
     if (!location.trim()) {
@@ -50,15 +56,15 @@ export default function CreateEventScreen({ navigation }: Props) {
       return;
     }
 
-    // Parse date
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const [hour, minute] = timeStr.split(':').map(Number);
-    if (!year || !month || !day || isNaN(hour) || isNaN(minute)) {
-      Alert.alert('Error', 'Invalid date or time format');
-      return;
-    }
-
-    const date = new Date(year, month - 1, day, hour, minute);
+    const date = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+      eventTime.getHours(),
+      eventTime.getMinutes()
+    );
+    const hour = eventTime.getHours();
+    const minute = eventTime.getMinutes();
 
     setLoading(true);
     try {
@@ -138,26 +144,76 @@ export default function CreateEventScreen({ navigation }: Props) {
         onChangeText={setTitle}
       />
 
-      {/* Date & Time */}
-      <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="2025-10-15"
-        placeholderTextColor={colors.textSecondary}
-        value={dateStr}
-        onChangeText={setDateStr}
-        keyboardType="numbers-and-punctuation"
-      />
+      {/* Date */}
+      <Text style={styles.label}>Date</Text>
+      <TouchableOpacity
+        style={styles.pickerButton}
+        onPress={() => { setTempDate(eventDate || new Date()); setShowDatePicker(true); }}
+      >
+        <Ionicons name="calendar-outline" size={18} color={eventDate ? colors.text : colors.textSecondary} />
+        <Text style={[styles.pickerText, !eventDate && styles.pickerPlaceholder]}>
+          {eventDate ? eventDate.toISOString().split('T')[0] : 'Select date'}
+        </Text>
+      </TouchableOpacity>
 
-      <Text style={styles.label}>Time (HH:MM)</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="20:00"
-        placeholderTextColor={colors.textSecondary}
-        value={timeStr}
-        onChangeText={setTimeStr}
-        keyboardType="numbers-and-punctuation"
-      />
+      <Modal visible={showDatePicker} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select date</Text>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display="spinner"
+              onChange={(_e: DateTimePickerEvent, d?: Date) => { if (d) setTempDate(d); }}
+              textColor={colors.text}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalButton} onPress={() => setShowDatePicker(false)}>
+                <Text style={styles.modalButtonCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, styles.modalButtonOk]} onPress={() => { setEventDate(tempDate); setShowDatePicker(false); }}>
+                <Text style={styles.modalButtonOkText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Time */}
+      <Text style={styles.label}>Time</Text>
+      <TouchableOpacity
+        style={styles.pickerButton}
+        onPress={() => { setTempTime(eventTime); setShowTimePicker(true); }}
+      >
+        <Ionicons name="time-outline" size={18} color={colors.text} />
+        <Text style={styles.pickerText}>
+          {`${String(eventTime.getHours()).padStart(2, '0')}:${String(eventTime.getMinutes()).padStart(2, '0')}`}
+        </Text>
+      </TouchableOpacity>
+
+      <Modal visible={showTimePicker} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select time</Text>
+            <DateTimePicker
+              value={tempTime}
+              mode="time"
+              display="spinner"
+              onChange={(_e: DateTimePickerEvent, d?: Date) => { if (d) setTempTime(d); }}
+              textColor={colors.text}
+              is24Hour={true}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalButton} onPress={() => setShowTimePicker(false)}>
+                <Text style={styles.modalButtonCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, styles.modalButtonOk]} onPress={() => { setEventTime(tempTime); setShowTimePicker(false); }}>
+                <Text style={styles.modalButtonOkText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Location */}
       <Text style={styles.label}>Location</Text>
@@ -276,6 +332,68 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
     fontWeight: '600',
+  },
+  pickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.cardLight,
+    borderRadius: 12,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  pickerText: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  pickerPlaceholder: {
+    color: colors.textSecondary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: spacing.lg,
+    width: '85%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.md,
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: colors.cardLight,
+  },
+  modalButtonCancel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  modalButtonOk: {
+    backgroundColor: colors.accent,
+  },
+  modalButtonOkText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
   },
   submitButton: {
     backgroundColor: colors.accent,

@@ -1,5 +1,34 @@
 # Gametime — Changelog
 
+## Build #6 — 2026-04-06
+**Version 1.0.1**
+
+### Features
+- Chat emoji reactions: long-press message → pick from 👍❤️😂😮😢🔥 → reaction pills shown below message
+- Haptic feedback + scale animation on long-press
+- Emoji picker positioned above the message bubble
+- Player license card upload (photo/gallery) on profile
+- Admin can view license cards in member detail screen (tap for full-size)
+- Event location opens in Maps app (match events only)
+- Next event banner: auto-collapses after RSVP, shows RSVP counts in collapsed view
+- Date/time picker on New Event screen (native spinner instead of manual text input)
+
+### Fixes
+- Chat: Firestore reconnect on app foreground (fix delayed messages)
+- Chat: retry logic (3x) on permission-denied after fresh registration
+- Chat: client-side timestamp fallback for correct message ordering
+- RegisterScreen: include displayName + medicalExpiry in membership doc
+- Poll selected option: green instead of red
+- MemberDetail: swapped Change role / Remove from team colors
+- Firebase Storage rules deployed (fix license card upload permission)
+
+### Data fixes (server-side, no build needed)
+- Fixed missing displayNames for registered testers
+- Cleared old push tokens broken by project rename
+- Firestore rules: invite code lookup without auth
+
+---
+
 ## Build #5 — 2026-04-05
 **Version 1.0.0 (iOS build 5, Android versionCode 4)**
 

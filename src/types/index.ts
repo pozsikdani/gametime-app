@@ -33,6 +33,7 @@ export interface TeamMembership {
   jerseySize: string;
   idNumber: string;
   medicalExpiry: string;
+  licenseCardURL?: string;
   joinedAt: Timestamp;
 }
 
@@ -63,6 +64,7 @@ export interface Message {
   senderPhotoURL?: string;
   createdAt: Timestamp | null;
   type: 'text' | 'system';
+  reactions?: { [emoji: string]: string[] };
 }
 
 // ─── Calendar ──────────────────────────────────────────

@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
@@ -56,6 +58,7 @@ interface MemberProfile {
   jerseySize: string;
   idNumber: string;
   medicalExpiry: string;
+  licenseCardURL?: string;
   joinedAt?: any;
 }
 
@@ -71,6 +74,7 @@ export default function MemberDetailScreen({ route, navigation }: any) {
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [userGlobal, setUserGlobal] = useState<UserGlobal>({});
   const [loading, setLoading] = useState(true);
+  const [showLicenseModal, setShowLicenseModal] = useState(false);
 
   useEffect(() => {
     if (!activeTeamId) return;
@@ -94,6 +98,7 @@ export default function MemberDetailScreen({ route, navigation }: any) {
             jerseySize: d.jerseySize || '',
             idNumber: d.idNumber || '',
             medicalExpiry: d.medicalExpiry || '',
+            licenseCardURL: d.licenseCardURL || undefined,
             joinedAt: d.joinedAt,
           });
         }
@@ -258,20 +263,38 @@ export default function MemberDetailScreen({ route, navigation }: any) {
           {renderField('medical-outline', 'Medical clearance', profile.medicalExpiry || '')}
         </View>
 
+        {/* License card */}
+        {profile.licenseCardURL && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Player license card</Text>
+            <TouchableOpacity onPress={() => setShowLicenseModal(true)} activeOpacity={0.8}>
+              <Image source={{ uri: profile.licenseCardURL }} style={styles.licenseThumb} resizeMode="cover" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <Modal visible={showLicenseModal} transparent animationType="fade">
+          <Pressable style={styles.licenseOverlay} onPress={() => setShowLicenseModal(false)}>
+            {profile.licenseCardURL && (
+              <Image source={{ uri: profile.licenseCardURL }} style={styles.licenseFull} resizeMode="contain" />
+            )}
+          </Pressable>
+        </Modal>
+
         {/* Admin actions */}
         {isAdmin && (
           <View style={styles.actionsSection}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleChangeRole}>
-              <Ionicons name="swap-horizontal-outline" size={20} color={colors.accent} />
-              <Text style={styles.actionText}>Change role</Text>
+            <TouchableOpacity style={[styles.actionButton, styles.actionDanger]} onPress={handleChangeRole}>
+              <Ionicons name="swap-horizontal-outline" size={20} color={colors.error} />
+              <Text style={[styles.actionText, styles.actionTextDanger]}>Change role</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.actionButton, styles.actionDanger]}
+              style={styles.actionButton}
               onPress={handleRemoveMember}
             >
-              <Ionicons name="person-remove-outline" size={20} color={colors.error} />
-              <Text style={[styles.actionText, styles.actionTextDanger]}>Remove from team</Text>
+              <Ionicons name="person-remove-outline" size={20} color={colors.accent} />
+              <Text style={styles.actionText}>Remove from team</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -397,6 +420,24 @@ const styles = StyleSheet.create({
   fieldValueEmpty: {
     color: colors.textSecondary,
     fontStyle: 'italic',
+  },
+  licenseThumb: {
+    width: '100%',
+    height: 180,
+    borderRadius: 8,
+    marginTop: spacing.sm,
+    backgroundColor: colors.cardLight,
+  },
+  licenseOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  licenseFull: {
+    width: '100%',
+    height: '80%',
   },
   actionsSection: {
     gap: spacing.sm,

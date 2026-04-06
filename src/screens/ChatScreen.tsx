@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   AppState,
+  Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -19,8 +20,12 @@ import {
   limit,
   onSnapshot,
   addDoc,
+  doc,
+  updateDoc,
   serverTimestamp,
   Timestamp,
+  arrayUnion,
+  arrayRemove,
   disableNetwork,
   enableNetwork,
 } from 'firebase/firestore';
@@ -40,6 +45,7 @@ type Props = {
 export default function ChatScreen({ navigation }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pickerMessageId, setPickerMessageId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const currentUser = auth.currentUser;
   const { activeTeamId } = useTeam();
@@ -131,6 +137,20 @@ export default function ChatScreen({ navigation }: Props) {
     });
   };
 
+  const toggleReaction = async (messageId: string, emoji: string) => {
+    if (!currentUser || !activeTeamId) return;
+    const uid = currentUser.uid;
+    const msgRef = doc(db, 'teams', activeTeamId, 'messages', messageId);
+    const msg = messages.find((m) => m.id === messageId);
+    const currentReactions = msg?.reactions?.[emoji] || [];
+    const hasReacted = currentReactions.includes(uid);
+
+    await updateDoc(msgRef, {
+      [`reactions.${emoji}`]: hasReacted ? arrayRemove(uid) : arrayUnion(uid),
+    });
+    setPickerMessageId(null);
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -156,6 +176,14 @@ export default function ChatScreen({ navigation }: Props) {
         })}
       />
 
+      {/* Dismiss overlay when picker is open */}
+      {pickerMessageId && (
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={() => setPickerMessageId(null)}
+        />
+      )}
+
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -164,6 +192,10 @@ export default function ChatScreen({ navigation }: Props) {
           <MessageBubble
             message={item}
             isOwn={item.senderId === currentUser?.uid}
+            currentUid={currentUser?.uid}
+            showPicker={item.id === pickerMessageId}
+            onLongPress={(id) => setPickerMessageId(id)}
+            onReactionPress={toggleReaction}
           />
         )}
         contentContainerStyle={styles.messageList}

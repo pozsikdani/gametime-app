@@ -26,7 +26,7 @@ export default function NextEventBanner({ onPress }: Props) {
   const [event, setEvent] = useState<CalendarEvent | null>(null);
   const [myRsvp, setMyRsvp] = useState<RsvpStatus | null>(null);
   const [rsvpCounts, setRsvpCounts] = useState({ yes: 0, no: 0, maybe: 0 });
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean | null>(null); // null = auto
   const currentUser = auth.currentUser;
   const { activeTeamId } = useTeam();
 
@@ -76,6 +76,13 @@ export default function NextEventBanner({ onPress }: Props) {
     return unsub;
   }, [event?.id, activeTeamId]);
 
+  // Auto-collapse if user already RSVPed
+  useEffect(() => {
+    if (collapsed === null && myRsvp !== null) {
+      setCollapsed(true);
+    }
+  }, [myRsvp]);
+
   const handleRsvp = async (status: RsvpStatus) => {
     if (!currentUser || !event) return;
     const rsvpRef = doc(db, 'teams', activeTeamId!, 'events', event.id, 'rsvps', currentUser.uid);
@@ -119,7 +126,7 @@ export default function NextEventBanner({ onPress }: Props) {
         { status: 'no' as RsvpStatus, label: 'No', icon: 'close-circle' as const, color: colors.error },
       ];
 
-  if (collapsed) {
+  if (collapsed === true) {
     return (
       <TouchableOpacity
         style={styles.bannerCollapsed}
@@ -142,6 +149,11 @@ export default function NextEventBanner({ onPress }: Props) {
             color={myRsvp === 'yes' ? colors.success : myRsvp === 'no' ? colors.error : '#fdcb6e'}
           />
         )}
+        <View style={styles.collapsedCount}>
+          <Text style={[styles.countTextSmall, { color: colors.success }]}>{rsvpCounts.yes}</Text>
+          <Text style={styles.countSepSmall}>/</Text>
+          <Text style={[styles.countTextSmall, { color: colors.error }]}>{rsvpCounts.no}</Text>
+        </View>
         <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
       </TouchableOpacity>
     );
@@ -252,6 +264,19 @@ const styles = StyleSheet.create({
   },
   collapsedCountdown: {
     fontSize: 11,
+    color: colors.textSecondary,
+  },
+  collapsedCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 1,
+  },
+  countTextSmall: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  countSepSmall: {
+    fontSize: 10,
     color: colors.textSecondary,
   },
   topRow: {

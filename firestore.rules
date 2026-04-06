@@ -48,6 +48,7 @@ service cloud.firestore {
       match /messages/{messageId} {
         allow read: if isTeamMember(teamId);
         allow create: if isTeamMember(teamId);
+        allow update: if isTeamMember(teamId);
         allow delete: if isTeamAdmin(teamId);
       }
 

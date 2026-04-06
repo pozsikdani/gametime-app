@@ -211,7 +211,7 @@ export default function PollDetailScreen({ route, navigation }: Props) {
               <View style={styles.optionContent}>
                 <View style={styles.optionLeft}>
                   {isMyVote && (
-                    <Ionicons name="checkmark-circle" size={18} color={colors.accent} />
+                    <Ionicons name="checkmark-circle" size={18} color={colors.success} />
                   )}
                   <Text style={[styles.optionText, isMyVote && styles.optionTextSelected]}>
                     {option.text}
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   optionCardSelected: {
-    borderColor: colors.accent,
+    borderColor: colors.success,
   },
   progressBar: {
     position: 'absolute',
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   progressBarSelected: {
-    backgroundColor: 'rgba(196, 30, 58, 0.2)',
+    backgroundColor: 'rgba(0, 184, 148, 0.2)',
   },
   optionContent: {
     flexDirection: 'row',
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   percentageSelected: {
-    color: colors.accent,
+    color: colors.success,
   },
   votersSection: {
     backgroundColor: colors.card,

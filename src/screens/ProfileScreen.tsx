@@ -15,6 +15,7 @@ import {
   ActionSheetIOS,
   ActivityIndicator,
   Modal,
+  Pressable,
 } from 'react-native';
 import {
   updateProfile,
@@ -30,7 +31,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../hooks/useAdmin';
 import { useTeam } from '../contexts/TeamContext';
-import { pickImage, takePhoto, uploadProfilePhoto, savePhotoUrl } from '../services/profilePhoto';
+import { pickImage, takePhoto, uploadProfilePhoto, savePhotoUrl, pickLicenseCard, takeLicenseCardPhoto, uploadLicenseCard } from '../services/profilePhoto';
 
 const POSITION_OPTIONS = ['PG', 'SG', 'SF', 'PF', 'C'];
 const JERSEY_SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -78,6 +79,11 @@ export default function ProfileScreen({ navigation }: any) {
   // Profile photo
   const [photoURL, setPhotoURL] = useState<string | null>(user?.photoURL || null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  // License card
+  const [licenseCardURL, setLicenseCardURL] = useState<string | null>(null);
+  const [uploadingLicense, setUploadingLicense] = useState(false);
+  const [showLicenseModal, setShowLicenseModal] = useState(false);
 
   // Notification preferences
   const [notifChat, setNotifChat] = useState(true);
@@ -136,6 +142,7 @@ export default function ProfileScreen({ navigation }: any) {
             jerseySize: data.jerseySize || '',
             medicalExpiry: data.medicalExpiry || '',
           });
+          if (data.licenseCardURL) setLicenseCardURL(data.licenseCardURL);
         }
       }
     } catch (e) {
@@ -618,6 +625,70 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </Modal>
 
+        {/* License card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="card-outline" size={20} color={colors.textSecondary} />
+            <Text style={styles.cardLabel}>Player license card</Text>
+          </View>
+          {uploadingLicense ? (
+            <ActivityIndicator size="small" color={colors.accent} style={{ paddingVertical: spacing.lg }} />
+          ) : licenseCardURL ? (
+            <TouchableOpacity onPress={() => setShowLicenseModal(true)} activeOpacity={0.8}>
+              <Image source={{ uri: licenseCardURL }} style={styles.licenseCardThumb} resizeMode="cover" />
+              <Text style={styles.licenseCardHint}>Tap to view full size</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.licenseUploadButton}
+              onPress={() => {
+                const doUpload = async (uri: string) => {
+                  if (!user || !activeTeamId) return;
+                  setUploadingLicense(true);
+                  try {
+                    const url = await uploadLicenseCard(activeTeamId, user.uid, uri);
+                    await updateDoc(memberDocPath!, { licenseCardURL: url });
+                    setLicenseCardURL(url);
+                  } catch (e) {
+                    Alert.alert('Error', 'Failed to upload license card');
+                  } finally {
+                    setUploadingLicense(false);
+                  }
+                };
+                if (Platform.OS === 'ios') {
+                  ActionSheetIOS.showActionSheetWithOptions(
+                    { options: ['Cancel', 'Take photo', 'Gallery'], cancelButtonIndex: 0 },
+                    async (idx) => {
+                      let uri: string | null = null;
+                      if (idx === 1) uri = await takeLicenseCardPhoto();
+                      else if (idx === 2) uri = await pickLicenseCard();
+                      if (uri) doUpload(uri);
+                    }
+                  );
+                } else {
+                  Alert.alert('Player license card', 'Choose source', [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Take photo', onPress: async () => { const u = await takeLicenseCardPhoto(); if (u) doUpload(u); } },
+                    { text: 'Gallery', onPress: async () => { const u = await pickLicenseCard(); if (u) doUpload(u); } },
+                  ]);
+                }
+              }}
+            >
+              <Ionicons name="cloud-upload-outline" size={24} color={colors.accent} />
+              <Text style={styles.licenseUploadText}>Upload license card</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* License card full-size modal */}
+        <Modal visible={showLicenseModal} transparent animationType="fade">
+          <Pressable style={styles.licenseModalOverlay} onPress={() => setShowLicenseModal(false)}>
+            {licenseCardURL && (
+              <Image source={{ uri: licenseCardURL }} style={styles.licenseCardFull} resizeMode="contain" />
+            )}
+          </Pressable>
+        </Modal>
+
         {/* Notifications */}
         <Text style={styles.sectionHeader}>Notifications</Text>
 
@@ -912,6 +983,46 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colors.text,
+  },
+  licenseCardThumb: {
+    width: '100%',
+    height: 180,
+    borderRadius: 8,
+    marginTop: spacing.sm,
+    backgroundColor: colors.cardLight,
+  },
+  licenseCardHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  licenseUploadButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.lg,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    marginTop: spacing.sm,
+  },
+  licenseUploadText: {
+    fontSize: 14,
+    color: colors.accent,
+    fontWeight: '600',
+  },
+  licenseModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  licenseCardFull: {
+    width: '100%',
+    height: '80%',
   },
   sectionHeader: {
     fontSize: 13,

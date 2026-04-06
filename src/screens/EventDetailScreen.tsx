@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Linking,
+  Platform,
 } from 'react-native';
 import {
   doc,
@@ -325,10 +327,28 @@ export default function EventDetailScreen({ route, navigation }: Props) {
               <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
               <Text style={styles.detailText}>{formatFullDate(event.date)}</Text>
             </View>
-            <View style={styles.detailRow}>
-              <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.detailText}>{event.location}</Text>
-            </View>
+            {isMatch ? (
+              <TouchableOpacity
+                style={styles.detailRow}
+                onPress={() => {
+                  const address = encodeURIComponent(event.location);
+                  const url = Platform.select({
+                    ios: `maps:0,0?q=${address}`,
+                    android: `geo:0,0?q=${address}`,
+                  }) || `https://www.google.com/maps/search/?api=1&query=${address}`;
+                  Linking.openURL(url);
+                }}
+              >
+                <Ionicons name="location-outline" size={18} color={colors.accent} />
+                <Text style={[styles.detailText, styles.detailLink]}>{event.location}</Text>
+                <Ionicons name="open-outline" size={14} color={colors.accent} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.detailRow}>
+                <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.detailText}>{event.location}</Text>
+              </View>
+            )}
             {isMatch && event.opponent && (
               <View style={styles.detailRow}>
                 <Ionicons name="people-outline" size={18} color={colors.textSecondary} />
@@ -665,6 +685,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     flex: 1,
+  },
+  detailLink: {
+    color: colors.accent,
+    textDecorationLine: 'underline',
   },
   rsvpSection: {
     marginBottom: spacing.lg,
