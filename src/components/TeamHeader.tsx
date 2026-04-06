@@ -9,8 +9,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { useTeam } from '../contexts/TeamContext';
 import { colors, spacing } from '../constants/theme';
+
+const APP_VERSION = Constants.expoConfig?.version || '?';
 
 export default function TeamHeader() {
   const { activeTeamId, activeTeam, teams, switchTeam } = useTeam();
@@ -34,6 +37,7 @@ export default function TeamHeader() {
         ) : (
           <Text style={styles.teamNameSingle}>{activeTeam?.name || 'Team'}</Text>
         )}
+        <Text style={styles.versionText}>v{APP_VERSION}</Text>
       </View>
 
       <Modal
@@ -88,7 +92,17 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  versionText: {
+    position: 'absolute',
+    right: spacing.md,
+    bottom: spacing.sm + 2,
+    fontSize: 10,
+    color: colors.textSecondary,
+    opacity: 0.5,
   },
   selector: {
     flexDirection: 'row',
