@@ -17,7 +17,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "8"
+      "buildNumber": "10"
     },
     "android": {
       "adaptiveIcon": {
@@ -34,8 +34,6 @@
       }
     },
     "owner": "pozsikdani",
-    "plugins": [
-      "@giphy/react-native-sdk"
-    ]
+    "plugins": []
   }
 }

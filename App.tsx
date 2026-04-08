@@ -28,14 +28,15 @@ import MemberDetailScreen from './src/screens/MemberDetailScreen';
 import TeamHeader from './src/components/TeamHeader';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { spacing } from './src/constants/theme';
-let giphyInitialized = false;
-try {
-  const { GiphySDK } = require('@giphy/react-native-sdk');
-  GiphySDK.configure({ apiKey: 'E9rPq5cUqwR8PWkPZbQ6ItQG02RKNb2w' });
-  giphyInitialized = true;
-} catch (e) {
-  console.warn('Giphy SDK not available (Expo Go?)');
-}
+// Giphy SDK temporarily disabled — will switch to Tenor API
+// let giphyInitialized = false;
+// try {
+//   const { GiphySDK } = require('@giphy/react-native-sdk');
+//   GiphySDK.configure({ apiKey: 'E9rPq5cUqwR8PWkPZbQ6ItQG02RKNb2w' });
+//   giphyInitialized = true;
+// } catch (e) {
+//   console.warn('Giphy SDK not available');
+// }
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
