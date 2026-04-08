@@ -1,12 +1,82 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTeam } from '../contexts/TeamContext';
 import { Team } from '../types';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function TeamPickerScreen() {
+  const { colors } = useTheme();
   const { teams, activeTeamId, switchTeam } = useTeam();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    header: {
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.md,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    list: {
+      padding: spacing.md,
+    },
+    teamCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    teamCardActive: {
+      borderColor: colors.accent,
+    },
+    teamLogo: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+    },
+    teamLogoFallback: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.accent,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    teamLogoText: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    teamInfo: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    teamName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    teamSport: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+  }), [colors]);
 
   const renderTeam = ({ item }: { item: Team }) => {
     const isActive = item.id === activeTeamId;
@@ -49,71 +119,3 @@ export default function TeamPickerScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  list: {
-    padding: spacing.md,
-  },
-  teamCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  teamCardActive: {
-    borderColor: colors.accent,
-  },
-  teamLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  teamLogoFallback: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  teamLogoText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  teamInfo: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  teamName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  teamSport: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-});

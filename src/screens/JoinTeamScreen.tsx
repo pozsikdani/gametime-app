@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,12 +22,74 @@ import {
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../../firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function JoinTeamScreen() {
+  const { colors } = useTheme();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const user = auth.currentUser;
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+      justifyContent: 'center',
+    },
+    content: {
+      alignItems: 'center',
+      paddingHorizontal: spacing.xl,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: spacing.lg,
+      marginBottom: spacing.xs,
+    },
+    subtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
+    },
+    input: {
+      width: '100%',
+      backgroundColor: colors.card,
+      color: colors.text,
+      borderRadius: 12,
+      padding: spacing.md,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      textAlign: 'center',
+      letterSpacing: 2,
+      marginBottom: spacing.md,
+    },
+    button: {
+      width: '100%',
+      backgroundColor: colors.accent,
+      borderRadius: 12,
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    logoutLink: {
+      marginTop: spacing.xl,
+    },
+    logoutText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+  }), [colors]);
 
   const handleJoin = async () => {
     if (!user || !code.trim()) return;
@@ -122,63 +184,3 @@ export default function JoinTeamScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-    justifyContent: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: spacing.lg,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  input: {
-    width: '100%',
-    backgroundColor: colors.card,
-    color: colors.text,
-    borderRadius: 12,
-    padding: spacing.md,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    textAlign: 'center',
-    letterSpacing: 2,
-    marginBottom: spacing.md,
-  },
-  button: {
-    width: '100%',
-    backgroundColor: colors.accent,
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  logoutLink: {
-    marginTop: spacing.xl,
-  },
-  logoutText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-});

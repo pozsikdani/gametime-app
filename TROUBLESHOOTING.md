@@ -54,6 +54,22 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
+**Ha a `rm -rf node_modules` nem működik** ("Directory not empty" vagy "item is in use" hibák):
+
+```bash
+# 1. Lőj le az összes node processzt
+pkill -f node
+
+# 2. Finder-ben töröld: Desktop/claudecode/mobilapp/node_modules → Move to Trash
+# 3. Ha a Trash ürítésnél "item in use" hibát kapsz → nyomj "Continue" minden fájlnál
+# 4. Ha még mindig nem megy → pkill -f node újra, aztán Empty Trash újra
+
+# 5. Telepítsd újra
+source ~/.nvm/nvm.sh && nvm use 20
+npm install
+npx expo start --clear
+```
+
 **Megelőzés:** Soha ne futtass egyszerre több `npm install`-t!
 
 ---

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import {
   collection,
@@ -15,8 +15,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { auth, db } from '../../firebaseConfig';
 import { CalendarEvent, Rsvp, RsvpStatus } from '../types';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
 import { useTeam } from '../contexts/TeamContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = {
   onPress: (eventId: string) => void;
@@ -29,6 +30,7 @@ export default function NextEventBanner({ onPress }: Props) {
   const [collapsed, setCollapsed] = useState<boolean | null>(null); // null = auto
   const currentUser = auth.currentUser;
   const { activeTeamId } = useTeam();
+  const { colors } = useTheme();
 
   // Fetch next upcoming event (date > now)
   useEffect(() => {
@@ -92,6 +94,133 @@ export default function NextEventBanner({ onPress }: Props) {
       updatedAt: serverTimestamp(),
     });
   };
+
+  const styles = useMemo(() => StyleSheet.create({
+    banner: {
+      backgroundColor: colors.card,
+      marginHorizontal: spacing.sm,
+      marginTop: spacing.sm,
+      borderRadius: 12,
+      padding: spacing.md,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.accent,
+    },
+    bannerCollapsed: {
+      backgroundColor: colors.card,
+      marginHorizontal: spacing.sm,
+      marginTop: spacing.sm,
+      borderRadius: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.accent,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    collapsedTitle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.text,
+      flex: 1,
+    },
+    collapsedCountdown: {
+      fontSize: 11,
+      color: colors.textSecondary,
+    },
+    collapsedCount: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 1,
+    },
+    countTextSmall: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    countSepSmall: {
+      fontSize: 10,
+      color: colors.textSecondary,
+    },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+    },
+    typeBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: 10,
+    },
+    matchBadge: {
+      backgroundColor: colors.accent,
+    },
+    trainingBadge: {
+      backgroundColor: colors.success,
+    },
+    typeText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    countdown: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontStyle: 'italic',
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    detailRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginBottom: spacing.sm,
+    },
+    detailText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      flexShrink: 1,
+    },
+    rsvpRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    rsvpButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: spacing.xs + 2,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    rsvpText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    countChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: 'auto',
+      gap: 2,
+    },
+    countText: {
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    countSep: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+  }), [colors]);
 
   if (!event) return null;
 
@@ -232,130 +361,3 @@ export default function NextEventBanner({ onPress }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    backgroundColor: colors.card,
-    marginHorizontal: spacing.sm,
-    marginTop: spacing.sm,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.accent,
-  },
-  bannerCollapsed: {
-    backgroundColor: colors.card,
-    marginHorizontal: spacing.sm,
-    marginTop: spacing.sm,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.accent,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  collapsedTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-    flex: 1,
-  },
-  collapsedCountdown: {
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
-  collapsedCount: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 1,
-  },
-  countTextSmall: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  countSepSmall: {
-    fontSize: 10,
-    color: colors.textSecondary,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  typeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  matchBadge: {
-    backgroundColor: colors.accent,
-  },
-  trainingBadge: {
-    backgroundColor: colors.success,
-  },
-  typeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  countdown: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: spacing.sm,
-  },
-  detailText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    flexShrink: 1,
-  },
-  rsvpRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  rsvpButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  rsvpText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  countChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 'auto',
-    gap: 2,
-  },
-  countText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  countSep: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-});

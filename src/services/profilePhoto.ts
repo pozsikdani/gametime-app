@@ -83,3 +83,33 @@ export async function uploadLicenseCard(teamId: string, uid: string, uri: string
 
   return getDownloadURL(storageRef);
 }
+
+// Chat images
+export async function pickChatImage(): Promise<string | null> {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: false,
+    quality: 0.7,
+  });
+  if (result.canceled) return null;
+  return result.assets[0].uri;
+}
+
+export async function takeChatPhoto(): Promise<string | null> {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') return null;
+  const result = await ImagePicker.launchCameraAsync({
+    allowsEditing: false,
+    quality: 0.7,
+  });
+  if (result.canceled) return null;
+  return result.assets[0].uri;
+}
+
+export async function uploadChatImage(teamId: string, messageId: string, uri: string): Promise<string> {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  const storageRef = ref(storage, `chatImages/${teamId}/${messageId}.jpg`);
+  await uploadBytes(storageRef, blob);
+  return getDownloadURL(storageRef);
+}

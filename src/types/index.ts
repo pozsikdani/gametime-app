@@ -63,7 +63,9 @@ export interface Message {
   senderName: string;
   senderPhotoURL?: string;
   createdAt: Timestamp | null;
-  type: 'text' | 'system';
+  type: 'text' | 'system' | 'image' | 'gif';
+  imageURL?: string;
+  gifUrl?: string;
   reactions?: { [emoji: string]: string[] };
 }
 

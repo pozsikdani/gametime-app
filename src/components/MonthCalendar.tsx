@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Timestamp } from 'firebase/firestore';
 import { CalendarEvent } from '../types';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = {
   events: CalendarEvent[];
@@ -67,6 +68,8 @@ function getMonthDays(year: number, month: number) {
 }
 
 export default function MonthCalendar({ events, currentMonth, onChangeMonth, onDayPress, onEventPress, selectedDate }: Props) {
+  const { colors } = useTheme();
+
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   const days = getMonthDays(year, month);
@@ -97,6 +100,113 @@ export default function MonthCalendar({ events, currentMonth, onChangeMonth, onD
   for (let i = 0; i < days.length; i += 7) {
     weeks.push(days.slice(i, i + 7));
   }
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+    },
+    monthHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
+    },
+    arrow: {
+      padding: spacing.xs,
+    },
+    monthTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.accent,
+      textTransform: 'uppercase',
+      letterSpacing: 2,
+    },
+    dayNamesRow: {
+      flexDirection: 'row',
+      marginBottom: 4,
+    },
+    dayNameCell: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 6,
+    },
+    dayNameText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+    },
+    weekRow: {
+      flexDirection: 'row',
+    },
+    dayCell: {
+      flex: 1,
+      minHeight: 80,
+      borderWidth: 0.5,
+      borderColor: colors.border,
+      padding: 3,
+    },
+    dayCellActive: {
+      backgroundColor: colors.card,
+    },
+    todayCell: {
+      borderWidth: 2,
+      borderColor: colors.accent,
+    },
+    selectedCell: {
+      backgroundColor: 'rgba(196, 30, 58, 0.1)',
+    },
+    pastCell: {
+      backgroundColor: 'rgba(21, 21, 24, 0.5)',
+    },
+    dayNumber: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    todayNumber: {
+      color: colors.accent,
+      fontWeight: '800',
+    },
+    pastText: {
+      opacity: 0.4,
+    },
+    pastPill: {
+      opacity: 0.4,
+    },
+    eventPill: {
+      borderRadius: 4,
+      paddingHorizontal: 3,
+      paddingVertical: 1,
+      marginBottom: 2,
+    },
+    matchPill: {
+      backgroundColor: 'rgba(196, 30, 58, 0.25)',
+      borderLeftWidth: 2,
+      borderLeftColor: colors.accent,
+    },
+    trainingPill: {
+      backgroundColor: 'rgba(0, 184, 148, 0.2)',
+      borderLeftWidth: 2,
+      borderLeftColor: '#00b894',
+    },
+    eventPillTitle: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    eventPillTime: {
+      fontSize: 9,
+      color: colors.textSecondary,
+    },
+    moreText: {
+      fontSize: 9,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+  }), [colors]);
 
   return (
     <View style={styles.container}>
@@ -191,110 +301,3 @@ export default function MonthCalendar({ events, currentMonth, onChangeMonth, onD
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
-  monthHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-  },
-  arrow: {
-    padding: spacing.xs,
-  },
-  monthTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.accent,
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-  },
-  dayNamesRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  dayNameCell: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  dayNameText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-  },
-  weekRow: {
-    flexDirection: 'row',
-  },
-  dayCell: {
-    flex: 1,
-    minHeight: 80,
-    borderWidth: 0.5,
-    borderColor: colors.border,
-    padding: 3,
-  },
-  dayCellActive: {
-    backgroundColor: colors.card,
-  },
-  todayCell: {
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  selectedCell: {
-    backgroundColor: 'rgba(196, 30, 58, 0.1)',
-  },
-  pastCell: {
-    backgroundColor: 'rgba(21, 21, 24, 0.5)',
-  },
-  dayNumber: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  todayNumber: {
-    color: colors.accent,
-    fontWeight: '800',
-  },
-  pastText: {
-    opacity: 0.4,
-  },
-  pastPill: {
-    opacity: 0.4,
-  },
-  eventPill: {
-    borderRadius: 4,
-    paddingHorizontal: 3,
-    paddingVertical: 1,
-    marginBottom: 2,
-  },
-  matchPill: {
-    backgroundColor: 'rgba(196, 30, 58, 0.25)',
-    borderLeftWidth: 2,
-    borderLeftColor: colors.accent,
-  },
-  trainingPill: {
-    backgroundColor: 'rgba(0, 184, 148, 0.2)',
-    borderLeftWidth: 2,
-    borderLeftColor: '#00b894',
-  },
-  eventPillTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  eventPillTime: {
-    fontSize: 9,
-    color: colors.textSecondary,
-  },
-  moreText: {
-    fontSize: 9,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-});

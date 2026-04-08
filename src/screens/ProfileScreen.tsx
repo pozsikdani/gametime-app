@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   View,
@@ -26,7 +26,8 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdmin } from '../hooks/useAdmin';
@@ -62,6 +63,7 @@ const EMPTY_PROFILE: PlayerProfile = {
 };
 
 export default function ProfileScreen({ navigation }: any) {
+  const { colors, isDark, toggleTheme } = useTheme();
   const user = auth.currentUser;
   const isAdmin = useAdmin();
   const { activeTeamId, activeTeam, membership } = useTeam();
@@ -442,6 +444,338 @@ export default function ProfileScreen({ navigation }: any) {
     );
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    content: {
+      paddingTop: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    avatarContainer: {
+      alignItems: 'center',
+      marginBottom: spacing.xl,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.accent,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    avatarText: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    avatarImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+    },
+    cameraIcon: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      backgroundColor: colors.accent,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: colors.bg,
+    },
+    jerseyBadge: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: 2,
+      marginTop: -12,
+      borderWidth: 2,
+      borderColor: colors.accent,
+    },
+    jerseyBadgeText: {
+      color: colors.accent,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    roleBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.sm + 4,
+      paddingVertical: spacing.xs,
+      borderRadius: 16,
+      borderWidth: 1,
+    },
+    roleBadgeAdmin: {
+      borderColor: colors.accent,
+      backgroundColor: 'rgba(196, 30, 58, 0.15)',
+    },
+    roleBadgeUser: {
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+    },
+    roleBadgeText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    roleBadgeTextAdmin: {
+      color: colors.accent,
+    },
+    membersButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    membersButtonText: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    fieldDisplayValue: {
+      fontSize: 15,
+      color: colors.text,
+      paddingTop: spacing.xs,
+    },
+    fieldDisplayEmpty: {
+      color: colors.textSecondary,
+      fontStyle: 'italic',
+    },
+    dateModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    dateModalContent: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: spacing.lg,
+      width: '85%',
+      alignItems: 'center',
+    },
+    dateModalTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.md,
+    },
+    dateModalButtons: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginTop: spacing.md,
+      width: '100%',
+    },
+    dateModalButton: {
+      flex: 1,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: 10,
+      alignItems: 'center',
+      backgroundColor: colors.cardLight,
+    },
+    dateModalButtonCancel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    dateModalButtonOk: {
+      backgroundColor: colors.accent,
+    },
+    dateModalButtonOkText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    licenseCardThumb: {
+      width: '100%',
+      height: 180,
+      borderRadius: 8,
+      marginTop: spacing.sm,
+      backgroundColor: colors.cardLight,
+    },
+    licenseCardHint: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: spacing.xs,
+    },
+    licenseUploadButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.lg,
+      gap: spacing.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderStyle: 'dashed',
+      borderRadius: 8,
+      marginTop: spacing.sm,
+    },
+    licenseUploadText: {
+      fontSize: 14,
+      color: colors.accent,
+      fontWeight: '600',
+    },
+    licenseModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.9)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    licenseCardFull: {
+      width: '100%',
+      height: '80%',
+    },
+    sectionHeader: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginTop: spacing.lg,
+      marginBottom: spacing.sm,
+      marginLeft: spacing.xs,
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    cardLabel: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      flex: 1,
+    },
+    cardValue: {
+      fontSize: 16,
+      color: colors.text,
+      marginTop: spacing.sm,
+    },
+    emptyValue: {
+      color: colors.textSecondary,
+      fontStyle: 'italic',
+    },
+    editButton: {
+      fontSize: 13,
+      color: colors.accent,
+      fontWeight: '600',
+    },
+    input: {
+      backgroundColor: colors.cardLight,
+      color: colors.text,
+      borderRadius: 10,
+      padding: spacing.sm + 4,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginTop: spacing.sm,
+    },
+    optionRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs + 2,
+      marginTop: spacing.sm,
+    },
+    optionChip: {
+      paddingHorizontal: spacing.sm + 4,
+      paddingVertical: spacing.xs + 2,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: 'transparent',
+    },
+    optionChipActive: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
+    optionChipText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    optionChipTextActive: {
+      color: colors.text,
+    },
+    notifRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    notifInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      flex: 1,
+    },
+    notifLabel: {
+      fontSize: 15,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    notifDesc: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 1,
+    },
+    passwordSection: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      marginTop: -spacing.sm + 2,
+      borderTopLeftRadius: 0,
+      borderTopRightRadius: 0,
+    },
+    passwordButton: {
+      backgroundColor: colors.accent,
+      borderRadius: 10,
+      padding: spacing.sm + 4,
+      alignItems: 'center',
+      marginTop: spacing.sm,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    passwordButtonText: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    logoutButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.lg,
+      padding: spacing.md,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+    },
+    logoutText: {
+      color: colors.error,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  }), [colors]);
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -689,6 +1023,26 @@ export default function ProfileScreen({ navigation }: any) {
           </Pressable>
         </Modal>
 
+        {/* Theme */}
+        <Text style={styles.sectionHeader}>Appearance</Text>
+        <View style={styles.card}>
+          <View style={styles.notifRow}>
+            <View style={styles.notifInfo}>
+              <Ionicons name={isDark ? 'moon-outline' : 'sunny-outline'} size={20} color={colors.textSecondary} />
+              <View>
+                <Text style={styles.notifLabel}>Dark mode</Text>
+                <Text style={styles.notifDesc}>{isDark ? 'Dark theme active' : 'Light theme active'}</Text>
+              </View>
+            </View>
+            <Switch
+              value={isDark}
+              onValueChange={toggleTheme}
+              trackColor={{ false: colors.border, true: colors.accent }}
+              thumbColor={colors.text}
+            />
+          </View>
+        </View>
+
         {/* Notifications */}
         <Text style={styles.sectionHeader}>Notifications</Text>
 
@@ -829,335 +1183,3 @@ export default function ProfileScreen({ navigation }: any) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  content: {
-    paddingTop: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  cameraIcon: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: colors.accent,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.bg,
-  },
-  jerseyBadge: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 2,
-    marginTop: -12,
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  jerseyBadgeText: {
-    color: colors.accent,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  roleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.sm + 4,
-    paddingVertical: spacing.xs,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  roleBadgeAdmin: {
-    borderColor: colors.accent,
-    backgroundColor: 'rgba(196, 30, 58, 0.15)',
-  },
-  roleBadgeUser: {
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-  },
-  roleBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  roleBadgeTextAdmin: {
-    color: colors.accent,
-  },
-  membersButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  membersButtonText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  fieldDisplayValue: {
-    fontSize: 15,
-    color: colors.text,
-    paddingTop: spacing.xs,
-  },
-  fieldDisplayEmpty: {
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  dateModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dateModalContent: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: spacing.lg,
-    width: '85%',
-    alignItems: 'center',
-  },
-  dateModalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  dateModalButtons: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.md,
-    width: '100%',
-  },
-  dateModalButton: {
-    flex: 1,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: 10,
-    alignItems: 'center',
-    backgroundColor: colors.cardLight,
-  },
-  dateModalButtonCancel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  dateModalButtonOk: {
-    backgroundColor: colors.accent,
-  },
-  dateModalButtonOkText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  licenseCardThumb: {
-    width: '100%',
-    height: 180,
-    borderRadius: 8,
-    marginTop: spacing.sm,
-    backgroundColor: colors.cardLight,
-  },
-  licenseCardHint: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.xs,
-  },
-  licenseUploadButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-    borderRadius: 8,
-    marginTop: spacing.sm,
-  },
-  licenseUploadText: {
-    fontSize: 14,
-    color: colors.accent,
-    fontWeight: '600',
-  },
-  licenseModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  licenseCardFull: {
-    width: '100%',
-    height: '80%',
-  },
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-    marginLeft: spacing.xs,
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  cardLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  cardValue: {
-    fontSize: 16,
-    color: colors.text,
-    marginTop: spacing.sm,
-  },
-  emptyValue: {
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  editButton: {
-    fontSize: 13,
-    color: colors.accent,
-    fontWeight: '600',
-  },
-  input: {
-    backgroundColor: colors.cardLight,
-    color: colors.text,
-    borderRadius: 10,
-    padding: spacing.sm + 4,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginTop: spacing.sm,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs + 2,
-    marginTop: spacing.sm,
-  },
-  optionChip: {
-    paddingHorizontal: spacing.sm + 4,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: 'transparent',
-  },
-  optionChipActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  optionChipText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  optionChipTextActive: {
-    color: colors.text,
-  },
-  notifRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  notifInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    flex: 1,
-  },
-  notifLabel: {
-    fontSize: 15,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  notifDesc: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-  passwordSection: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    marginTop: -spacing.sm + 2,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-  },
-  passwordButton: {
-    backgroundColor: colors.accent,
-    borderRadius: 10,
-    padding: spacing.sm + 4,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  passwordButtonText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-  },
-  logoutText: {
-    color: colors.error,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useTeam } from '../contexts/TeamContext';
 import { useAdmin } from '../hooks/useAdmin';
@@ -25,7 +26,7 @@ interface MemberItem {
   joinedAt?: any;
 }
 
-function getMedicalStatus(expiry?: string): { label: string; color: string } | null {
+function getMedicalStatus(expiry: string | undefined, colors: any): { label: string; color: string } | null {
   if (!expiry) return { label: 'Not set', color: colors.textSecondary };
   const now = new Date();
   const exp = new Date(expiry);
@@ -51,20 +52,142 @@ const ROLE_ICONS: Record<TeamRole, string> = {
   guest: 'eye-outline',
 };
 
-const ROLE_COLORS: Record<TeamRole, string> = {
+const getRoleColors = (colors: any): Record<TeamRole, string> => ({
   admin: colors.accent,
   coach: '#fdcb6e',
   player: '#00b894',
   guest: colors.textSecondary,
-};
+});
 
 const ROLE_ORDER: TeamRole[] = ['admin', 'coach', 'player', 'guest'];
 
 export default function MembersScreen({ navigation }: any) {
+  const { colors } = useTheme();
   const { activeTeamId } = useTeam();
   const isAdmin = useAdmin();
   const [members, setMembers] = useState<MemberItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const ROLE_COLORS = useMemo(() => getRoleColors(colors), [colors]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.bg,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    backButton: {
+      marginRight: spacing.sm,
+      padding: spacing.xs,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: colors.text,
+      flex: 1,
+    },
+    countBadge: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      backgroundColor: colors.card,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: 12,
+      overflow: 'hidden',
+    },
+    list: {
+      padding: spacing.md,
+    },
+    memberCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.cardLight,
+      borderWidth: 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: spacing.md,
+    },
+    avatarText: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    memberInfo: {
+      flex: 1,
+    },
+    memberName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    memberMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    rolePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    roleText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    jerseyText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    medicalRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 4,
+    },
+    medicalText: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    separator: {
+      height: spacing.sm,
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xl * 2,
+      gap: spacing.sm,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+  }), [colors]);
 
   useEffect(() => {
     if (!activeTeamId) return;
@@ -100,7 +223,7 @@ export default function MembersScreen({ navigation }: any) {
     const roleColor = ROLE_COLORS[item.role];
     const roleIcon = ROLE_ICONS[item.role];
     const roleLabel = ROLE_LABELS[item.role];
-    const medical = getMedicalStatus(item.medicalExpiry);
+    const medical = getMedicalStatus(item.medicalExpiry, colors);
 
     return (
       <TouchableOpacity
@@ -181,122 +304,3 @@ export default function MembersScreen({ navigation }: any) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.bg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  backButton: {
-    marginRight: spacing.sm,
-    padding: spacing.xs,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-    flex: 1,
-  },
-  countBadge: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    backgroundColor: colors.card,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  list: {
-    padding: spacing.md,
-  },
-  memberCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.cardLight,
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  memberInfo: {
-    flex: 1,
-  },
-  memberName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  memberMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  rolePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  roleText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  jerseyText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  medicalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  medicalText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  separator: {
-    height: spacing.sm,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xl * 2,
-    gap: spacing.sm,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-});

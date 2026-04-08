@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gametime",
     "slug": "gametime-team",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -17,7 +17,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "5"
+      "buildNumber": "8"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,6 +33,9 @@
         "projectId": "dc2824cb-e6d4-4466-a46f-460af1a74e36"
       }
     },
-    "owner": "pozsikdani"
+    "owner": "pozsikdani",
+    "plugins": [
+      "@giphy/react-native-sdk"
+    ]
   }
 }

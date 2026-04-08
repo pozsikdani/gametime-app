@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useTeam } from '../contexts/TeamContext';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const APP_VERSION = Constants.expoConfig?.version || '?';
 
@@ -19,8 +20,106 @@ export default function TeamHeader() {
   const { activeTeamId, activeTeam, teams, switchTeam } = useTeam();
   const [visible, setVisible] = useState(false);
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const hasMultipleTeams = teams.length > 1;
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    versionText: {
+      position: 'absolute',
+      right: spacing.md,
+      bottom: spacing.sm + 2,
+      fontSize: 10,
+      color: colors.textSecondary,
+      opacity: 0.5,
+    },
+    selector: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: 8,
+      backgroundColor: 'rgba(255,255,255,0.05)',
+    },
+    teamName: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    teamNameSingle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.lg,
+    },
+    dropdown: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: spacing.md,
+      width: '100%',
+      maxWidth: 340,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    dropdownTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.md,
+      textAlign: 'center',
+    },
+    item: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.sm + 4,
+      paddingHorizontal: spacing.md,
+      borderRadius: 10,
+      marginBottom: spacing.xs,
+    },
+    itemActive: {
+      backgroundColor: 'rgba(196, 30, 58, 0.12)',
+    },
+    itemLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm + 2,
+    },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.textSecondary,
+    },
+    dotActive: {
+      backgroundColor: colors.accent,
+    },
+    itemText: {
+      fontSize: 15,
+      color: colors.textSecondary,
+    },
+    itemTextActive: {
+      color: colors.text,
+      fontWeight: '600',
+    },
+  }), [colors]);
 
   return (
     <>
@@ -84,100 +183,3 @@ export default function TeamHeader() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  versionText: {
-    position: 'absolute',
-    right: spacing.md,
-    bottom: spacing.sm + 2,
-    fontSize: 10,
-    color: colors.textSecondary,
-    opacity: 0.5,
-  },
-  selector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  teamName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  teamNameSingle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  dropdown: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: spacing.md,
-    width: '100%',
-    maxWidth: 340,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  dropdownTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm + 4,
-    paddingHorizontal: spacing.md,
-    borderRadius: 10,
-    marginBottom: spacing.xs,
-  },
-  itemActive: {
-    backgroundColor: 'rgba(196, 30, 58, 0.12)',
-  },
-  itemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm + 2,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.textSecondary,
-  },
-  dotActive: {
-    backgroundColor: colors.accent,
-  },
-  itemText: {
-    fontSize: 15,
-    color: colors.textSecondary,
-  },
-  itemTextActive: {
-    color: colors.text,
-    fontWeight: '600',
-  },
-});

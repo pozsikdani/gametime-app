@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,8 @@ import {
 } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { auth, db } from '../../firebaseConfig';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useTeam } from '../contexts/TeamContext';
 
 type Props = {
@@ -24,11 +25,107 @@ type Props = {
 };
 
 export default function CreatePollScreen({ navigation }: Props) {
+  const { colors } = useTheme();
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [multipleChoice, setMultipleChoice] = useState(false);
   const [loading, setLoading] = useState(false);
   const { activeTeamId } = useTeam();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    content: {
+      paddingTop: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xl * 2,
+    },
+    backButton: {
+      marginBottom: spacing.md,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.lg,
+    },
+    label: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+      marginTop: spacing.md,
+    },
+    input: {
+      backgroundColor: colors.cardLight,
+      color: colors.text,
+      borderRadius: 12,
+      padding: spacing.md,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    optionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    optionInput: {
+      flex: 1,
+    },
+    removeButton: {
+      padding: spacing.xs,
+    },
+    addOptionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+    },
+    addOptionText: {
+      fontSize: 15,
+      color: colors.accent,
+      fontWeight: '600',
+    },
+    switchRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.cardLight,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginTop: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    switchLabel: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    switchText: {
+      fontSize: 15,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    submitButton: {
+      backgroundColor: colors.accent,
+      borderRadius: 12,
+      padding: spacing.md,
+      alignItems: 'center',
+      marginTop: spacing.xl,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    submitText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  }), [colors]);
 
   const addOption = () => {
     if (options.length >= 8) {
@@ -154,98 +251,3 @@ export default function CreatePollScreen({ navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  content: {
-    paddingTop: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xl * 2,
-  },
-  backButton: {
-    marginBottom: spacing.md,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
-  input: {
-    backgroundColor: colors.cardLight,
-    color: colors.text,
-    borderRadius: 12,
-    padding: spacing.md,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  optionInput: {
-    flex: 1,
-  },
-  removeButton: {
-    padding: spacing.xs,
-  },
-  addOptionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  addOptionText: {
-    fontSize: 15,
-    color: colors.accent,
-    fontWeight: '600',
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.cardLight,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginTop: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  switchLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  switchText: {
-    fontSize: 15,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  submitButton: {
-    backgroundColor: colors.accent,
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.xl,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  submitText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

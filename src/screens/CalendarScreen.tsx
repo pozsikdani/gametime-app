@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '../../firebaseConfig';
 import { CalendarEvent } from '../types';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAdmin } from '../hooks/useAdmin';
 import { syncMkoszMatches } from '../utils/syncMkoszMatches';
 import MonthCalendar from '../components/MonthCalendar';
@@ -31,6 +32,7 @@ type FilterType = 'all' | 'match' | 'training';
 type ViewMode = 'list' | 'calendar';
 
 export default function CalendarScreen({ navigation }: Props) {
+  const { colors } = useTheme();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -40,6 +42,138 @@ export default function CalendarScreen({ navigation }: Props) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const isAdmin = useAdmin();
   const { activeTeamId } = useTeam();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    addButton: {
+      padding: spacing.xs,
+    },
+    filterRow: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      gap: spacing.sm,
+    },
+    filterTab: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs + 2,
+      borderRadius: 20,
+      backgroundColor: colors.card,
+    },
+    filterTabActive: {
+      backgroundColor: colors.accent,
+    },
+    filterText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    filterTextActive: {
+      color: colors.text,
+      fontWeight: '600',
+    },
+    list: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    sectionHeader: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    sectionHeaderText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    eventCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+    },
+    eventCardPast: {
+      opacity: 0.5,
+    },
+    eventLeft: {
+      marginRight: spacing.md,
+    },
+    typeBadge: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    matchBadge: {
+      backgroundColor: colors.accent,
+    },
+    trainingBadge: {
+      backgroundColor: '#00b894',
+    },
+    eventContent: {
+      flex: 1,
+    },
+    eventTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    textPast: {
+      color: colors.textSecondary,
+    },
+    eventDate: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginBottom: 2,
+    },
+    eventMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    eventLocation: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    eventScore: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.accent,
+      marginTop: 2,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+  }), [colors]);
 
   // Auto-sync MKOSZ matches on first load
   useEffect(() => {
@@ -303,135 +437,3 @@ export default function CalendarScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  addButton: {
-    padding: spacing.xs,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
-  },
-  filterTab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: 20,
-    backgroundColor: colors.card,
-  },
-  filterTabActive: {
-    backgroundColor: colors.accent,
-  },
-  filterText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  filterTextActive: {
-    color: colors.text,
-    fontWeight: '600',
-  },
-  list: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  sectionHeader: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  sectionHeaderText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  eventCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-  },
-  eventCardPast: {
-    opacity: 0.5,
-  },
-  eventLeft: {
-    marginRight: spacing.md,
-  },
-  typeBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  matchBadge: {
-    backgroundColor: colors.accent,
-  },
-  trainingBadge: {
-    backgroundColor: '#00b894',
-  },
-  eventContent: {
-    flex: 1,
-  },
-  eventTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  textPast: {
-    color: colors.textSecondary,
-  },
-  eventDate: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 2,
-  },
-  eventMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  eventLocation: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  eventScore: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.accent,
-    marginTop: 2,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-});

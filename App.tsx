@@ -26,7 +26,16 @@ import JoinTeamScreen from './src/screens/JoinTeamScreen';
 import MembersScreen from './src/screens/MembersScreen';
 import MemberDetailScreen from './src/screens/MemberDetailScreen';
 import TeamHeader from './src/components/TeamHeader';
-import { colors } from './src/constants/theme';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
+import { spacing } from './src/constants/theme';
+let giphyInitialized = false;
+try {
+  const { GiphySDK } = require('@giphy/react-native-sdk');
+  GiphySDK.configure({ apiKey: 'E9rPq5cUqwR8PWkPZbQ6ItQG02RKNb2w' });
+  giphyInitialized = true;
+} catch (e) {
+  console.warn('Giphy SDK not available (Expo Go?)');
+}
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -34,13 +43,7 @@ const CalendarStack = createNativeStackNavigator();
 const PollStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
 
-const navTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: colors.bg,
-  },
-};
+// navTheme is now created dynamically inside the App component
 
 function CalendarStackScreen() {
   return (
@@ -73,6 +76,7 @@ function ProfileStackScreen() {
 }
 
 function MainTabs() {
+  const { colors } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -135,6 +139,7 @@ const TeamStack = createNativeStackNavigator();
 
 function AuthenticatedApp() {
   const { loading: teamLoading, activeTeamId, teams } = useTeam();
+  const { colors } = useTheme();
 
   if (teamLoading) {
     return (
@@ -161,7 +166,7 @@ function AuthenticatedApp() {
   );
 }
 
-export default function App() {
+function AppContent() {
   const { user, loading } = useAuth();
   const notificationListener = useRef<Notifications.EventSubscription>();
   const responseListener = useRef<Notifications.EventSubscription>();
@@ -192,6 +197,16 @@ export default function App() {
     };
   }, [user]);
 
+  const { colors, isDark } = useTheme();
+
+  const navTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: colors.bg,
+    },
+  };
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg }}>
@@ -203,7 +218,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer theme={navTheme}>
-        <StatusBar style="light" />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         {user ? (
           <TeamProvider>
             <AuthenticatedApp />
@@ -222,5 +237,13 @@ export default function App() {
         )}
       </NavigationContainer>
     </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

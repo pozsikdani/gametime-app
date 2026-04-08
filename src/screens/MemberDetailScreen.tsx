@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useTeam } from '../contexts/TeamContext';
 import { useAdmin } from '../hooks/useAdmin';
@@ -26,12 +27,12 @@ const ROLE_LABELS: Record<TeamRole, string> = {
   guest: 'Guest',
 };
 
-const ROLE_COLORS: Record<TeamRole, string> = {
+const getRoleColors = (colors: any): Record<TeamRole, string> => ({
   admin: colors.accent,
   coach: '#fdcb6e',
   player: '#00b894',
   guest: colors.textSecondary,
-};
+});
 
 const ROLE_ICONS: Record<TeamRole, string> = {
   admin: 'shield-checkmark',
@@ -68,9 +69,177 @@ interface UserGlobal {
 }
 
 export default function MemberDetailScreen({ route, navigation }: any) {
+  const { colors } = useTheme();
   const { userId, displayName: navName } = route.params;
   const { activeTeamId } = useTeam();
   const isAdmin = useAdmin();
+  const ROLE_COLORS = useMemo(() => getRoleColors(colors), [colors]);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.bg,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    backButton: {
+      padding: spacing.xs,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl * 2,
+    },
+    avatarSection: {
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.cardLight,
+      borderWidth: 3,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.sm,
+    },
+    avatarImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      marginBottom: spacing.sm,
+    },
+    avatarText: {
+      fontSize: 32,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    nameText: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    emailText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: spacing.sm,
+    },
+    rolePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      borderWidth: 1.5,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+    },
+    roleText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: spacing.md,
+    },
+    fieldRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    fieldLabel: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginLeft: spacing.sm,
+      width: 110,
+    },
+    fieldValue: {
+      fontSize: 15,
+      color: colors.text,
+      fontWeight: '500',
+      flex: 1,
+      textAlign: 'right',
+    },
+    fieldValueEmpty: {
+      color: colors.textSecondary,
+      fontStyle: 'italic',
+    },
+    licenseThumb: {
+      width: '100%',
+      height: 180,
+      borderRadius: 8,
+      marginTop: spacing.sm,
+      backgroundColor: colors.cardLight,
+    },
+    licenseOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.9)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    licenseFull: {
+      width: '100%',
+      height: '80%',
+    },
+    actionsSection: {
+      gap: spacing.sm,
+    },
+    actionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      gap: spacing.sm,
+    },
+    actionDanger: {
+      borderWidth: 1,
+      borderColor: colors.error + '40',
+    },
+    actionText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.accent,
+    },
+    actionTextDanger: {
+      color: colors.error,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+  }), [colors]);
+
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [userGlobal, setUserGlobal] = useState<UserGlobal>({});
   const [loading, setLoading] = useState(true);
@@ -302,168 +471,3 @@ export default function MemberDetailScreen({ route, navigation }: any) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.bg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  backButton: {
-    padding: spacing.xs,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl * 2,
-  },
-  avatarSection: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.cardLight,
-    borderWidth: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: spacing.sm,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  nameText: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  emailText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  rolePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1.5,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  roleText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.md,
-  },
-  fieldRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginLeft: spacing.sm,
-    width: 110,
-  },
-  fieldValue: {
-    fontSize: 15,
-    color: colors.text,
-    fontWeight: '500',
-    flex: 1,
-    textAlign: 'right',
-  },
-  fieldValueEmpty: {
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  licenseThumb: {
-    width: '100%',
-    height: 180,
-    borderRadius: 8,
-    marginTop: spacing.sm,
-    backgroundColor: colors.cardLight,
-  },
-  licenseOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  licenseFull: {
-    width: '100%',
-    height: '80%',
-  },
-  actionsSection: {
-    gap: spacing.sm,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  actionDanger: {
-    borderWidth: 1,
-    borderColor: colors.error + '40',
-  },
-  actionText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.accent,
-  },
-  actionTextDanger: {
-    color: colors.error,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-});

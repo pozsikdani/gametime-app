@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -27,7 +27,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { auth, db } from '../../firebaseConfig';
 import { CalendarEvent, Rsvp, RsvpStatus } from '../types';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAdmin } from '../hooks/useAdmin';
 import { useTeam } from '../contexts/TeamContext';
 
@@ -37,6 +38,7 @@ type Props = {
 };
 
 export default function EventDetailScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
   const { eventId } = route.params;
   const [event, setEvent] = useState<CalendarEvent | null>(null);
   const [rsvps, setRsvps] = useState<Rsvp[]>([]);
@@ -54,6 +56,313 @@ export default function EventDetailScreen({ route, navigation }: Props) {
   const isAdmin = useAdmin();
   const { activeTeamId, membership } = useTeam();
   const isGuest = membership?.role === 'guest';
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    center: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    content: {
+      paddingTop: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xl * 2,
+    },
+    backButton: {
+      marginBottom: spacing.md,
+    },
+    typeBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs + 2,
+      borderRadius: 20,
+      marginBottom: spacing.md,
+    },
+    matchBanner: {
+      backgroundColor: colors.accent,
+    },
+    trainingBanner: {
+      backgroundColor: '#00b894',
+    },
+    typeLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    score: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.accent,
+      marginBottom: spacing.md,
+    },
+    detailCard: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    detailRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+    },
+    detailText: {
+      fontSize: 14,
+      color: colors.text,
+      flex: 1,
+    },
+    detailLink: {
+      color: colors.accent,
+      textDecorationLine: 'underline',
+    },
+    rsvpSection: {
+      marginBottom: spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    rsvpButtons: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    rsvpButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    rsvpYes: {
+      borderColor: '#00b894',
+      backgroundColor: 'transparent',
+    },
+    rsvpActive: {
+      backgroundColor: '#00b894',
+      borderColor: '#00b894',
+    },
+    rsvpMaybe: {
+      borderColor: '#fdcb6e',
+      backgroundColor: 'transparent',
+    },
+    rsvpMaybeActive: {
+      backgroundColor: '#fdcb6e',
+      borderColor: '#fdcb6e',
+    },
+    rsvpNo: {
+      borderColor: colors.error,
+      backgroundColor: 'transparent',
+    },
+    rsvpNoActive: {
+      backgroundColor: colors.error,
+      borderColor: colors.error,
+    },
+    rsvpText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    rsvpTextActive: {
+      color: colors.text,
+    },
+    rsvpSummary: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    rsvpCounts: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: spacing.md,
+    },
+    countBadge: {
+      alignItems: 'center',
+    },
+    countNumber: {
+      fontSize: 24,
+      fontWeight: '700',
+    },
+    countLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    nameSection: {
+      marginTop: spacing.sm,
+    },
+    nameLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    nameList: {
+      fontSize: 14,
+      color: colors.text,
+      lineHeight: 20,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontStyle: 'italic',
+      marginBottom: spacing.md,
+    },
+    deleteButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      padding: spacing.md,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+    },
+    deleteText: {
+      color: colors.error,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    editLabel: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+      marginTop: spacing.md,
+    },
+    editInput: {
+      backgroundColor: colors.cardLight,
+      color: colors.text,
+      borderRadius: 12,
+      padding: spacing.md,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    editButtons: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    editSaveButton: {
+      flex: 1,
+      backgroundColor: colors.accent,
+      borderRadius: 12,
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    editSaveText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    editCancelButton: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    editCancelText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    squadBanner: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+      borderWidth: 1,
+      borderColor: colors.accent,
+    },
+    squadHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    inSquadBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: 'rgba(0, 184, 148, 0.15)',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: 8,
+      alignSelf: 'flex-start',
+      marginBottom: spacing.sm,
+    },
+    inSquadText: {
+      color: '#00b894',
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    squadMemberRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: 4,
+    },
+    squadMemberName: {
+      fontSize: 15,
+      color: colors.text,
+    },
+    squadSelectSection: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+      borderWidth: 1,
+      borderColor: colors.accent,
+    },
+    squadSelectRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
+      borderRadius: 8,
+    },
+    squadSelectRowActive: {
+      backgroundColor: 'rgba(0, 184, 148, 0.1)',
+    },
+    squadSelectName: {
+      fontSize: 15,
+      color: colors.textSecondary,
+    },
+    announceSquadButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.accent,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    announceSquadText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  }), [colors]);
 
   useEffect(() => {
     const unsubEvent = onSnapshot(doc(db, 'teams', activeTeamId!, 'events', eventId), (docSnap) => {
@@ -618,311 +927,3 @@ export default function EventDetailScreen({ route, navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  center: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    paddingTop: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xl * 2,
-  },
-  backButton: {
-    marginBottom: spacing.md,
-  },
-  typeBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: 20,
-    marginBottom: spacing.md,
-  },
-  matchBanner: {
-    backgroundColor: colors.accent,
-  },
-  trainingBanner: {
-    backgroundColor: '#00b894',
-  },
-  typeLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  score: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.accent,
-    marginBottom: spacing.md,
-  },
-  detailCard: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  detailText: {
-    fontSize: 14,
-    color: colors.text,
-    flex: 1,
-  },
-  detailLink: {
-    color: colors.accent,
-    textDecorationLine: 'underline',
-  },
-  rsvpSection: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  rsvpButtons: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  rsvpButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  rsvpYes: {
-    borderColor: '#00b894',
-    backgroundColor: 'transparent',
-  },
-  rsvpActive: {
-    backgroundColor: '#00b894',
-    borderColor: '#00b894',
-  },
-  rsvpMaybe: {
-    borderColor: '#fdcb6e',
-    backgroundColor: 'transparent',
-  },
-  rsvpMaybeActive: {
-    backgroundColor: '#fdcb6e',
-    borderColor: '#fdcb6e',
-  },
-  rsvpNo: {
-    borderColor: colors.error,
-    backgroundColor: 'transparent',
-  },
-  rsvpNoActive: {
-    backgroundColor: colors.error,
-    borderColor: colors.error,
-  },
-  rsvpText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  rsvpTextActive: {
-    color: colors.text,
-  },
-  rsvpSummary: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  rsvpCounts: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: spacing.md,
-  },
-  countBadge: {
-    alignItems: 'center',
-  },
-  countNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  countLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  nameSection: {
-    marginTop: spacing.sm,
-  },
-  nameLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  nameList: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 20,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-    marginBottom: spacing.md,
-  },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-  },
-  deleteText: {
-    color: colors.error,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  editLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.md,
-  },
-  editInput: {
-    backgroundColor: colors.cardLight,
-    color: colors.text,
-    borderRadius: 12,
-    padding: spacing.md,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  editButtons: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  editSaveButton: {
-    flex: 1,
-    backgroundColor: colors.accent,
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  editSaveText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  editCancelButton: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  editCancelText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Squad styles
-  squadBanner: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  squadHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  inSquadBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0, 184, 148, 0.15)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-    marginBottom: spacing.sm,
-  },
-  inSquadText: {
-    color: '#00b894',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  squadMemberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: 4,
-  },
-  squadMemberName: {
-    fontSize: 15,
-    color: colors.text,
-  },
-  squadSelectSection: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  squadSelectRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    borderRadius: 8,
-  },
-  squadSelectRowActive: {
-    backgroundColor: 'rgba(0, 184, 148, 0.1)',
-  },
-  squadSelectName: {
-    fontSize: 15,
-    color: colors.textSecondary,
-  },
-  announceSquadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.accent,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  announceSquadText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

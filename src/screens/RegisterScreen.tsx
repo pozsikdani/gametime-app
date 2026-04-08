@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, arrayUnion, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
@@ -21,12 +22,75 @@ type Props = {
 };
 
 export default function RegisterScreen({ navigation, route }: Props) {
+  const { colors } = useTheme();
   const { teamId, teamName } = route.params || {};
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    content: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.xl,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    teamName: {
+      fontSize: 15,
+      color: colors.accent,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
+      fontWeight: '600',
+    },
+    input: {
+      backgroundColor: colors.cardLight,
+      color: colors.text,
+      borderRadius: 12,
+      padding: spacing.md,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginBottom: spacing.md,
+    },
+    error: {
+      color: colors.error,
+      fontSize: 14,
+      marginBottom: spacing.md,
+      textAlign: 'center',
+    },
+    button: {
+      backgroundColor: colors.accent,
+      borderRadius: 12,
+      padding: spacing.md,
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    buttonDisabled: {
+      opacity: 0.6,
+    },
+    buttonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    link: {
+      color: colors.accent,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+  }), [colors]);
 
   const handleRegister = async () => {
     if (!displayName.trim() || !email.trim() || !password.trim()) {
@@ -136,65 +200,3 @@ export default function RegisterScreen({ navigation, route }: Props) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  teamName: {
-    fontSize: 15,
-    color: colors.accent,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-    fontWeight: '600',
-  },
-  input: {
-    backgroundColor: colors.cardLight,
-    color: colors.text,
-    borderRadius: 12,
-    padding: spacing.md,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.md,
-  },
-  error: {
-    color: colors.error,
-    fontSize: 14,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: colors.accent,
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  link: {
-    color: colors.accent,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-});

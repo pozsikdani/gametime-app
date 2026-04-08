@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { auth, db } from '../../firebaseConfig';
 import { Poll, PollVote } from '../types';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAdmin } from '../hooks/useAdmin';
 import { useTeam } from '../contexts/TeamContext';
 
@@ -32,6 +33,7 @@ type Props = {
 };
 
 export default function PollDetailScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
   const { pollId } = route.params;
   const [poll, setPoll] = useState<Poll | null>(null);
   const [votes, setVotes] = useState<(PollVote & { userId: string })[]>([]);
@@ -40,6 +42,158 @@ export default function PollDetailScreen({ route, navigation }: Props) {
   const currentUser = auth.currentUser;
   const isAdmin = useAdmin();
   const { activeTeamId } = useTeam();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    center: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    content: {
+      paddingTop: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xl * 2,
+    },
+    backButton: {
+      marginBottom: spacing.md,
+    },
+    statusBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs + 2,
+      borderRadius: 20,
+      marginBottom: spacing.md,
+    },
+    activeBadge: {
+      backgroundColor: colors.accent,
+    },
+    closedBadge: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    statusText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    question: {
+      fontSize: 22,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    voteCount: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: spacing.lg,
+    },
+    optionsContainer: {
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    optionCard: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+    },
+    optionCardSelected: {
+      borderColor: colors.success,
+    },
+    progressBar: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      borderRadius: 11,
+    },
+    progressBarDefault: {
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    },
+    progressBarSelected: {
+      backgroundColor: 'rgba(0, 184, 148, 0.2)',
+    },
+    optionContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    optionLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      flex: 1,
+    },
+    optionText: {
+      fontSize: 15,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    optionTextSelected: {
+      fontWeight: '700',
+    },
+    percentage: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    percentageSelected: {
+      color: colors.success,
+    },
+    votersSection: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    voterGroup: {
+      marginBottom: spacing.sm,
+    },
+    voterGroupTitle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 2,
+    },
+    voterNames: {
+      fontSize: 14,
+      color: colors.text,
+      lineHeight: 20,
+    },
+    adminActions: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    adminButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      padding: spacing.md,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+    },
+    adminButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+    },
+  }), [colors]);
 
   useEffect(() => {
     const unsubPoll = onSnapshot(doc(db, 'teams', activeTeamId!, 'polls', pollId), (docSnap) => {
@@ -271,155 +425,3 @@ export default function PollDetailScreen({ route, navigation }: Props) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  center: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    paddingTop: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xl * 2,
-  },
-  backButton: {
-    marginBottom: spacing.md,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: 20,
-    marginBottom: spacing.md,
-  },
-  activeBadge: {
-    backgroundColor: colors.accent,
-  },
-  closedBadge: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  question: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  voteCount: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-  },
-  optionsContainer: {
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  optionCard: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  optionCardSelected: {
-    borderColor: colors.success,
-  },
-  progressBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    borderRadius: 11,
-  },
-  progressBarDefault: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  progressBarSelected: {
-    backgroundColor: 'rgba(0, 184, 148, 0.2)',
-  },
-  optionContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  optionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    flex: 1,
-  },
-  optionText: {
-    fontSize: 15,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  optionTextSelected: {
-    fontWeight: '700',
-  },
-  percentage: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  percentageSelected: {
-    color: colors.success,
-  },
-  votersSection: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  voterGroup: {
-    marginBottom: spacing.sm,
-  },
-  voterGroupTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 2,
-  },
-  voterNames: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 20,
-  },
-  adminActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  adminButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-  },
-  adminButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});

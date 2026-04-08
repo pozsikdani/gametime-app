@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '../../firebaseConfig';
 import { Poll } from '../types';
-import { colors, spacing } from '../constants/theme';
+import { spacing } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useAdmin } from '../hooks/useAdmin';
 import { useTeam } from '../contexts/TeamContext';
 
@@ -25,10 +26,98 @@ type Props = {
 };
 
 export default function PollsScreen({ navigation }: Props) {
+  const { colors } = useTheme();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const isAdmin = useAdmin();
   const { activeTeamId } = useTeam();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    addButton: {
+      padding: spacing.xs,
+    },
+    list: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    sectionHeader: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    sectionHeaderText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    pollCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      padding: spacing.md,
+    },
+    pollCardClosed: {
+      opacity: 0.5,
+    },
+    pollIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(196, 30, 58, 0.15)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: spacing.md,
+    },
+    pollContent: {
+      flex: 1,
+    },
+    pollQuestion: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    closedText: {
+      color: colors.textSecondary,
+    },
+    pollMeta: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+  }), [colors]);
 
   useEffect(() => {
     const q = query(
@@ -132,90 +221,3 @@ export default function PollsScreen({ navigation }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  addButton: {
-    padding: spacing.xs,
-  },
-  list: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  sectionHeader: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  sectionHeaderText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  pollCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: spacing.md,
-  },
-  pollCardClosed: {
-    opacity: 0.5,
-  },
-  pollIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(196, 30, 58, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  pollContent: {
-    flex: 1,
-  },
-  pollQuestion: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  closedText: {
-    color: colors.textSecondary,
-  },
-  pollMeta: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-});

@@ -2,21 +2,38 @@ const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
-const { Expo } = require('expo-server-sdk');
 
 initializeApp();
 const db = getFirestore();
-const expo = new Expo();
+
+// Lazy-load Expo SDK to avoid deployment timeout
+let _expo = null;
+function getExpo() {
+  if (!_expo) {
+    const { Expo } = require('expo-server-sdk');
+    _expo = new Expo();
+  }
+  return _expo;
+}
+function isExpoPushToken(token) {
+  const { Expo } = require('expo-server-sdk');
+  return Expo.isExpoPushToken(token);
+}
 
 // Send push notification when a new chat message is created (multi-team)
 exports.onNewMessage = onDocumentCreated('teams/{teamId}/messages/{messageId}', async (event) => {
   const message = event.data?.data();
   if (!message) return;
 
+  // Skip system messages
+  if (message.type === 'system') return;
+
   const { teamId, messageId } = event.params;
   const senderId = message.senderId;
-  const senderName = message.senderName || 'Valaki';
+  const senderName = message.senderName || 'Unknown';
   const text = message.text || '';
+
+  console.log(`New message in team ${teamId} from ${senderName}: "${text.substring(0, 50)}"`);
 
   // Get team info for notification title
   const teamDoc = await db.doc(`teams/${teamId}`).get();
@@ -26,8 +43,10 @@ exports.onNewMessage = onDocumentCreated('teams/{teamId}/messages/{messageId}', 
   const membersSnapshot = await db.collection(`teams/${teamId}/members`).get();
   const memberUids = membersSnapshot.docs.map((doc) => doc.id);
 
+  console.log(`Team has ${memberUids.length} members, sender: ${senderId}`);
+
   // Get push tokens for team members only
-  const pushTokens = [];
+  const pushMessages = [];
 
   for (const uid of memberUids) {
     // Don't send to the sender
@@ -39,38 +58,62 @@ exports.onNewMessage = onDocumentCreated('teams/{teamId}/messages/{messageId}', 
     const userData = userDoc.data();
     // Check notification preferences (default: enabled)
     const prefs = userData.notificationPrefs || {};
-    if (prefs.chat === false) continue;
-    // Collect all push tokens
+    if (prefs.chat === false) {
+      console.log(`Skipping ${userData.displayName}: chat notifications disabled`);
+      continue;
+    }
+
+    // Collect valid push tokens
     if (userData.pushTokens && Array.isArray(userData.pushTokens)) {
       userData.pushTokens.forEach((token) => {
-        if (Expo.isExpoPushToken(token)) {
-          pushTokens.push(token);
+        if (isExpoPushToken(token)) {
+          pushMessages.push({
+            to: token,
+            sound: 'default',
+            title: teamName ? `${senderName} · ${teamName}` : senderName,
+            body: text.length > 100 ? text.substring(0, 100) + '...' : text,
+            data: { type: 'chat', teamId, messageId },
+          });
         }
       });
     }
   }
 
-  if (pushTokens.length === 0) return;
+  if (pushMessages.length === 0) {
+    console.log('No push tokens to send to.');
+    return;
+  }
 
-  // Build notification messages
-  const notifTitle = teamName ? `${senderName} · ${teamName}` : senderName;
-  const messages = pushTokens.map((token) => ({
-    to: token,
-    sound: 'default',
-    title: notifTitle,
-    body: text.length > 100 ? text.substring(0, 100) + '...' : text,
-    data: { type: 'chat', teamId, messageId },
-  }));
+  console.log(`Sending ${pushMessages.length} push notifications...`);
 
-  // Send in chunks (Expo recommends max 100 per batch)
-  const chunks = expo.chunkPushNotifications(messages);
-  for (const chunk of chunks) {
+  // Send individually to avoid PUSH_TOO_MANY_EXPERIENCE_IDS error
+  let sent = 0;
+  let failed = 0;
+  for (const msg of pushMessages) {
     try {
-      await expo.sendPushNotificationsAsync(chunk);
+      const [ticket] = await getExpo().sendPushNotificationsAsync([msg]);
+      if (ticket.status === 'ok') {
+        sent++;
+      } else {
+        failed++;
+        console.error(`Push failed for ${msg.to}:`, ticket.message || ticket.details);
+        // Remove invalid token
+        if (ticket.details?.error === 'DeviceNotRegistered') {
+          console.log(`Removing invalid token: ${msg.to}`);
+          const usersSnap = await db.collection('users').where('pushTokens', 'array-contains', msg.to).get();
+          for (const userDoc of usersSnap.docs) {
+            const tokens = userDoc.data().pushTokens.filter((t) => t !== msg.to);
+            await db.doc(`users/${userDoc.id}`).update({ pushTokens: tokens });
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error sending push notifications:', error);
+      failed++;
+      console.error(`Push error for ${msg.to}:`, error.message || error);
     }
   }
+
+  console.log(`Push complete: ${sent} sent, ${failed} failed.`);
 });
 
 // ─── Scheduled: Medical expiry notifications ───────────────────
@@ -164,16 +207,16 @@ async function getTokensForUid(uid) {
   if (!userDoc.exists) return [];
   const data = userDoc.data();
   if (!data.pushTokens || !Array.isArray(data.pushTokens)) return [];
-  return data.pushTokens.filter((t) => Expo.isExpoPushToken(t));
+  return data.pushTokens.filter((t) => isExpoPushToken(t));
 }
 
 // ─── Helper: send push notifications in chunks ────────────────
 async function sendNotifications(messages) {
   if (messages.length === 0) return;
-  const chunks = expo.chunkPushNotifications(messages);
+  const chunks = getExpo().chunkPushNotifications(messages);
   for (const chunk of chunks) {
     try {
-      await expo.sendPushNotificationsAsync(chunk);
+      await getExpo().sendPushNotificationsAsync(chunk);
     } catch (error) {
       console.error('Error sending push notifications:', error);
     }
